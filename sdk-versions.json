@@ -1,0 +1,20 @@
+{
+    "artifact": "com.almatar:core-gms",
+    "mavenRepo": "https://maven.pkg.github.com/MT-Mob-Repo/Almatar_General_SDK",
+    "versions": [
+        {
+            "version": "1.0.3",
+            "releaseDate": "2026-10-26",
+            "requirements": {
+                "gradle": "9.6.0",
+                "agp": "9.4.1",
+                "kotlin": "2.4.20",
+                "ksp": "2.3.12",
+                "compileSdk": 37,
+                "minSdk": 26,
+                "jdk": 17
+            },
+            "notes": ""
+        }
+    ]
+}

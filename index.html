@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Almatar SDK Requirements</title>
+    <style>
+        :root {
+            --bg: #f5f5f7;
+            --card: #ffffff;
+            --text: #1c1c1e;
+            --muted: #6b6b70;
+            --border: #e2e2e7;
+            --accent: #7c3aed;
+            --accent-soft: #efe5ff;
+            --code-bg: #f3f3f6;
+            --code-text: #1c1c1e;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f0f12;
+                --card: #1a1a1f;
+                --text: #f2f2f5;
+                --muted: #9a9aa2;
+                --border: #2c2c34;
+                --accent: #a78bfa;
+                --accent-soft: #2a2140;
+                --code-bg: #121216;
+                --code-text: #e6e6ea;
+                --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+            }
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            padding: 24px 16px 64px;
+        }
+        .wrap { max-width: 760px; margin: 0 auto; }
+        header { margin-bottom: 24px; }
+        h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+        .sub { color: var(--muted); font-size: 14px; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .picker { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .picker label { font-weight: 600; font-size: 14px; }
+        select {
+            appearance: none;
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 36px 10px 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%238a8a90' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            min-width: 160px;
+        }
+        .badge {
+            display: inline-block;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 999px;
+            vertical-align: middle;
+        }
+        .meta { color: var(--muted); font-size: 13px; margin-left: auto; }
+        h2 { font-size: 15px; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 11px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
+        tr:last-child td { border-bottom: none; }
+        td.k { color: var(--muted); width: 45%; }
+        td.v { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .codeblock { position: relative; }
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0 0 14px;
+        }
+        .copy {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--card);
+            color: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .copy:hover { color: var(--accent); border-color: var(--accent); }
+        .notes { font-size: 14px; color: var(--muted); }
+        .notes:empty { display: none; }
+        .foot { color: var(--muted); font-size: 12px; text-align: center; margin-top: 8px; }
+        .error { color: #c0392b; font-size: 14px; }
+        @media (prefers-color-scheme: dark) { .error { color: #ff6b5e; } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <h1>Almatar SDK — Integration Requirements</h1>
+            <div class="sub">Pick your SDK version to see the exact build requirements.</div>
+        </header>
+
+        <div class="card">
+            <div class="picker">
+                <label for="versionSelect">SDK version</label>
+                <select id="versionSelect" aria-label="SDK version"></select>
+                <span id="latestBadge" class="badge" hidden>Latest</span>
+                <span id="releaseMeta" class="meta"></span>
+            </div>
+        </div>
+
+        <div id="content"></div>
+
+        <div class="foot" id="foot"></div>
+    </div>
+
+    <script>
+        const REQ_LABELS = {
+            gradle: "Gradle",
+            agp: "Android Gradle Plugin",
+            kotlin: "Kotlin",
+            ksp: "KSP",
+            compileSdk: "compileSdk",
+            minSdk: "minSdk",
+            targetSdk: "targetSdk",
+            jdk: "JDK"
+        };
+        const REQ_ORDER = ["gradle", "agp", "kotlin", "ksp", "compileSdk", "minSdk", "targetSdk", "jdk"];
+
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        }
+
+        function requirementsTable(req) {
+            const keys = REQ_ORDER.filter(k => k in req).concat(Object.keys(req).filter(k => !REQ_ORDER.includes(k)));
+            const rows = keys.map(k => {
+                const label = REQ_LABELS[k] || k;
+                const val = k === "compileSdk" || k === "minSdk" || k === "targetSdk"
+                    ? "API " + req[k]
+                    : (k === "jdk" ? "JDK " + req[k] : req[k]);
+                return `<tr><td class="k">${esc(label)}</td><td class="v">${esc(val)}</td></tr>`;
+            }).join("");
+            return `<table>${rows}</table>`;
+        }
+
+        function codeCard(title, code) {
+            const id = "c" + Math.random().toString(36).slice(2, 8);
+            return `<div class="card"><h2>${esc(title)}</h2><div class="codeblock">`
+                + `<button class="copy" data-target="${id}">Copy</button>`
+                + `<pre id="${id}">${esc(code)}</pre></div></div>`;
+        }
+
+        function dependencySnippet(data, version) {
+            return `dependencies {\n    implementation("${data.artifact}:${version}")\n}`;
+        }
+
+        function repoSnippet(data) {
+            return `// settings.gradle.kts  →  dependencyResolutionManagement { repositories { ... } }\n`
+                + `maven {\n`
+                + `    url = uri("${data.mavenRepo}")\n`
+                + `    credentials {\n`
+                + `        username = providers.gradleProperty("gpr.user").get()\n`
+                + `        password = providers.gradleProperty("gpr.key").get()\n`
+                + `    }\n`
+                + `}`;
+        }
+
+        function render(data, entry, isLatest) {
+            document.getElementById("latestBadge").hidden = !isLatest;
+            document.getElementById("releaseMeta").textContent =
+                entry.releaseDate ? "Released " + entry.releaseDate : "";
+
+            let html = "";
+            html += `<div class="card"><h2>Build requirements</h2>${requirementsTable(entry.requirements || {})}</div>`;
+            html += codeCard("Add the dependency", dependencySnippet(data, entry.version));
+            html += codeCard("Maven repository", repoSnippet(data));
+            if (entry.notes && entry.notes.trim()) {
+                html += `<div class="card"><h2>Notes</h2><div class="notes">${esc(entry.notes)}</div></div>`;
+            }
+            document.getElementById("content").innerHTML = html;
+        }
+
+        // Newest-first semantic sort.
+        function cmpVer(a, b) {
+            const pa = a.split(".").map(n => parseInt(n, 10) || 0);
+            const pb = b.split(".").map(n => parseInt(n, 10) || 0);
+            for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+                const d = (pb[i] || 0) - (pa[i] || 0);
+                if (d !== 0) return d;
+            }
+            return 0;
+        }
+
+        document.addEventListener("click", e => {
+            const btn = e.target.closest(".copy");
+            if (!btn) return;
+            const pre = document.getElementById(btn.dataset.target);
+            if (!pre) return;
+            navigator.clipboard.writeText(pre.textContent).then(() => {
+                const t = btn.textContent;
+                btn.textContent = "Copied";
+                setTimeout(() => (btn.textContent = t), 1200);
+            }).catch(() => {});
+        });
+
+        async function init() {
+            let data;
+            try {
+                const res = await fetch("sdk-versions.json", { cache: "no-store" });
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                data = await res.json();
+            } catch (err) {
+                document.getElementById("content").innerHTML =
+                    `<div class="card"><p class="error">Couldn't load <code>sdk-versions.json</code>.</p>`
+                    + `<p class="notes">Open this page over HTTP (GitHub Pages or a local server such as `
+                    + `<code>python3 -m http.server</code>) rather than from the file system.</p></div>`;
+                return;
+            }
+
+            const versions = (data.versions || []).slice().sort((a, b) => cmpVer(a.version, b.version));
+            const sel = document.getElementById("versionSelect");
+            if (!versions.length) {
+                document.getElementById("content").innerHTML =
+                    `<div class="card"><p class="notes">No versions published yet.</p></div>`;
+                return;
+            }
+            versions.forEach((v, i) => {
+                const opt = document.createElement("option");
+                opt.value = v.version;
+                opt.textContent = v.version + (i === 0 ? "  (latest)" : "");
+                sel.appendChild(opt);
+            });
+
+            function show(version) {
+                const entry = versions.find(v => v.version === version) || versions[0];
+                render(data, entry, entry.version === versions[0].version);
+            }
+            sel.addEventListener("change", () => show(sel.value));
+            sel.value = versions[0].version;
+            show(sel.value);
+
+            document.getElementById("foot").textContent =
+                data.artifact + " · " + versions.length + " version"
+                + (versions.length === 1 ? "" : "s") + " · generated from sdk-versions.json";
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,6 +1,26 @@
 {
     "artifact": "com.almatar:core-gms",
     "mavenRepo": "https://maven.pkg.github.com/MT-Mob-Repo/Almatar_General_SDK",
+    "flows": [
+        {
+            "id": "b2c",
+            "name": "B2C",
+            "desc": "Consumer integration. Initialize with enableB2bSDK = false and launch any of the hotel / flight / bookings flows directly.",
+            "init": "AlmatarAppInitializer.init(\n    application = this,\n    baseUrl = \"<your base url>\",\n    almatarEnvironment = AlmatarEnvironment.Production,\n    supportNumber = \"<support number>\",\n    almatarUiConfig = AlmatarUiConfig(),\n    enableB2bSDK = false,\n)"
+        },
+        {
+            "id": "b2b",
+            "name": "B2B",
+            "desc": "Corporate (e.g. Aamal) integration. Initialize with enableB2bSDK = true and a brandName. Same launch flows as B2C, with the corporate section enabled on payment.",
+            "init": "AlmatarAppInitializer.init(\n    application = this,\n    baseUrl = \"<your base url>\",\n    almatarEnvironment = AlmatarEnvironment.Production,\n    supportNumber = \"<support number>\",\n    almatarUiConfig = AlmatarUiConfig(),\n    enableB2bSDK = true,\n    brandName = \"<your brand>\",\n)"
+        },
+        {
+            "id": "sso",
+            "name": "B2B with SSO",
+            "desc": "Corporate SSO integration. Initialize in B2B mode, then hand the SDK a short-lived SSO token via launchB2BSsoBookings. Only the SSO bookings entry point is valid in this flow.",
+            "init": "// 1. Initialize in B2B mode\nAlmatarAppInitializer.init(\n    application = this,\n    baseUrl = \"<your base url>\",\n    almatarEnvironment = AlmatarEnvironment.Production,\n    supportNumber = \"<support number>\",\n    almatarUiConfig = AlmatarUiConfig(),\n    enableB2bSDK = true,\n    brandName = \"<your brand>\",\n)\n\n// 2. Launch bookings with a short-lived SSO token\nAlmatarAppInitializer.launchB2BSsoBookings(\n    shortLivedToken = token,\n    locale = LOCALE.ENGLISH,\n    almatarFlowFinishedCallback = { /* flow closed */ },\n    sdkLaunchCallback = object : SdkLaunchCallback {\n        override fun onError(error: Throwable) { /* handle */ }\n    },\n)"
+        }
+    ],
     "versions": [
         {
             "version": "1.0.3",
@@ -14,7 +34,118 @@
                 "minSdk": 26,
                 "jdk": 17
             },
-            "notes": ""
+            "notes": "",
+            "api": {
+                "added": [
+                    {
+                        "name": "AlmatarAppInitializer.init",
+                        "group": "Initialization",
+                        "flows": ["b2c", "b2b", "sso"],
+                        "signature": "fun init(\n    application: Application,\n    baseUrl: String,\n    almatarEnvironment: AlmatarEnvironment,\n    supportNumber: String,\n    almatarUiConfig: AlmatarUiConfig = AlmatarUiConfig(),\n    supportedCountry: SupportedCountry = SupportedCountry.ALL,\n    enableSDK: Boolean = true,\n    enableB2bSDK: Boolean = false,\n    brandName: String? = null,\n)",
+                        "desc": "Bootstraps the SDK (API/console URLs, environment, support number, UI config). Set enableB2bSDK = true and a brandName for B2B / SSO."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.setupGlobalConfig",
+                        "group": "Initialization",
+                        "flows": ["b2c", "b2b", "sso"],
+                        "signature": "fun setupGlobalConfig(supportedCountry: SupportedCountry = SupportedCountry.ALL)",
+                        "desc": "Sets the globally supported country/region for searches."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.launchHotels",
+                        "group": "Search & booking flows",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun launchHotels(\n    locale: LOCALE,\n    almatarFlowFinishedCallback: () -> Unit,\n    generateTokenImpl: (GenerateTokenCallback) -> Unit,\n    startPaymentFlowImpl: StartPaymentFlow?,\n    isHajj: Boolean = false,\n    baseUrl: String? = null,\n    sdkLaunchCallback: SdkLaunchCallback? = null,\n)",
+                        "desc": "Opens the hotel search-form flow."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.launchFlights",
+                        "group": "Search & booking flows",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun launchFlights(\n    locale: LOCALE,\n    almatarFlowFinishedCallback: () -> Unit,\n    generateTokenImpl: (GenerateTokenCallback) -> Unit,\n    startPaymentFlowImpl: StartPaymentFlow?,\n    isHajj: Boolean = false,\n    baseUrl: String? = null,\n    sdkLaunchCallback: SdkLaunchCallback? = null,\n)",
+                        "desc": "Opens the flight search-form flow."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.launchBookings",
+                        "group": "Manage bookings",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun launchBookings(\n    locale: LOCALE,\n    almatarFlowFinishedCallback: () -> Unit,\n    generateTokenImpl: (GenerateTokenCallback) -> Unit,\n    startPostPaymentFlow: ((postBookingId: String, bookingId: String, ancillaryType: String, PaymentFlowCallback) -> Unit)? = null,\n    isHajj: Boolean = false,\n    baseUrl: String? = null,\n    sdkLaunchCallback: SdkLaunchCallback? = null,\n)",
+                        "desc": "Opens the user's bookings / manage-booking (My Trips) flow."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.launchB2BSsoBookings",
+                        "group": "Manage bookings",
+                        "flows": ["sso"],
+                        "signature": "fun launchB2BSsoBookings(\n    shortLivedToken: String?,\n    locale: LOCALE,\n    almatarFlowFinishedCallback: () -> Unit,\n    isHajj: Boolean = false,\n    baseUrl: String? = null,\n    sdkLaunchCallback: SdkLaunchCallback? = null,\n)",
+                        "desc": "B2B SSO entry point: verifies a short-lived SSO token and opens booking-requests / user-bookings. Valid only in B2B SDK mode (otherwise reports via sdkLaunchCallback.onError)."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.launchHotelsSearchResults",
+                        "group": "Deep links",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun launchHotelsSearchResults(\n    hotelData: HotelSearchData,\n    locale: LOCALE,\n    almatarFlowFinishedCallback: () -> Unit,\n    generateTokenImpl: (GenerateTokenCallback) -> Unit,\n    startPaymentFlowImpl: StartPaymentFlow?,\n    isHajj: Boolean = false,\n    baseUrl: String? = null,\n    sdkLaunchCallback: SdkLaunchCallback? = null,\n)",
+                        "desc": "Deep-links straight into hotel search results for a prebuilt HotelSearchData."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.launchFlightsSearchResults",
+                        "group": "Deep links",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun launchFlightsSearchResults(\n    flightSearchData: FlightSearchData,\n    locale: LOCALE,\n    almatarFlowFinishedCallback: () -> Unit,\n    generateTokenImpl: (GenerateTokenCallback) -> Unit,\n    startPaymentFlowImpl: StartPaymentFlow?,\n    isHajj: Boolean = false,\n    baseUrl: String? = null,\n    sdkLaunchCallback: SdkLaunchCallback? = null,\n)",
+                        "desc": "Deep-links straight into flight search results for a prebuilt FlightSearchData."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.launchHotelConfirmation",
+                        "group": "Deep links",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun launchHotelConfirmation(\n    publicKey: String,\n    locale: LOCALE,\n    almatarFlowFinishedCallback: () -> Unit,\n    generateTokenImpl: (GenerateTokenCallback) -> Unit,\n    isHajj: Boolean = false,\n    baseUrl: String? = null,\n    sdkLaunchCallback: SdkLaunchCallback? = null,\n)",
+                        "desc": "Opens a hotel booking confirmation screen for a given booking publicKey."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.launchFlightConfirmation",
+                        "group": "Deep links",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun launchFlightConfirmation(\n    bookingKey: String,\n    locale: LOCALE,\n    almatarFlowFinishedCallback: () -> Unit,\n    generateTokenImpl: (GenerateTokenCallback) -> Unit,\n    isHajj: Boolean = false,\n    baseUrl: String? = null,\n    sdkLaunchCallback: SdkLaunchCallback? = null,\n)",
+                        "desc": "Opens a flight booking confirmation screen for a given bookingKey."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.preFillFlightPassengers",
+                        "group": "Passenger prefill",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun preFillFlightPassengers(\n    passengers: List<FlightPassengerData>,\n    lastDepartureDate: LocalDate,\n    onComplete: ((adultCount: Int?, childCount: Int?, infantCount: Int?, errorMessage: String?) -> Unit)? = null,\n)",
+                        "desc": "Validates and caches flight passengers (nationality / document checks), classifies adult/child/infant at lastDepartureDate; reports counts or an error via onComplete."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.preFillHotelPassenger",
+                        "group": "Passenger prefill",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun preFillHotelPassenger(\n    passenger: HotelPassengerData,\n    onComplete: ((isCompleted: Boolean, message: String?) -> Unit)? = null,\n)",
+                        "desc": "Validates and caches a single hotel guest for auto-filling the guest-details form."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.clearCachedFlightPassengers",
+                        "group": "Passenger prefill",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun clearCachedFlightPassengers()",
+                        "desc": "Clears cached / pre-filled flight passenger data."
+                    },
+                    {
+                        "name": "PaymentFeatureConfig.forSDK",
+                        "group": "Payment configuration",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "fun forSDK(): PaymentFeatureConfig",
+                        "desc": "Factory for the payment-screen feature config used in SDK mode (coupon / wallet / loyalty / corporate hidden by default; showPaymentMethods follows useAlmatarPaymentFlow())."
+                    },
+                    {
+                        "name": "PaymentFeatureConfig.sdkShow* toggles",
+                        "group": "Payment configuration",
+                        "flows": ["b2c", "b2b"],
+                        "signature": "companion object {\n    var sdkShowCoupon: Boolean = false\n    var sdkShowWallet: Boolean = false\n    var sdkShowLoyalty: Boolean = false\n    var sdkShowCorporateSection: Boolean = false\n}",
+                        "desc": "Runtime overrides for payment-screen features. Read at payment time, so changes take effect without re-init."
+                    }
+                ],
+                "changed": [],
+                "removed": []
+            }
         }
     ]
 }

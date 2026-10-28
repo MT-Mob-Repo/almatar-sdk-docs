@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Almatar SDK integration requirements and public API by version and flow (B2C, B2B, B2B with SSO) — Gradle, AGP, Kotlin, KSP, compileSdk, minSdk, JDK and functions." />
+    <meta name="description" content="Almatar SDK integration requirements by version — Gradle, AGP, Kotlin, KSP, compileSdk, minSdk and JDK." />
     <title>Almatar SDK Requirements</title>
     <style>
         :root {
@@ -16,12 +16,6 @@
             --accent-soft: #efe5ff;
             --code-bg: #f3f3f6;
             --code-text: #1c1c1e;
-            --green: #1f8a4c;
-            --green-soft: #e3f5ea;
-            --amber: #b2740a;
-            --amber-soft: #fbf0d9;
-            --red: #c0392b;
-            --red-soft: #fbe4e1;
             --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
         }
         @media (prefers-color-scheme: dark) {
@@ -35,12 +29,6 @@
                 --accent-soft: #2a2140;
                 --code-bg: #121216;
                 --code-text: #e6e6ea;
-                --green: #4ade80;
-                --green-soft: #15291d;
-                --amber: #f0b429;
-                --amber-soft: #2e2410;
-                --red: #ff6b5e;
-                --red-soft: #2e1614;
                 --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
             }
         }
@@ -131,84 +119,13 @@
         .foot { color: var(--muted); font-size: 12px; text-align: center; margin-top: 8px; }
         .error { color: #c0392b; font-size: 14px; }
         @media (prefers-color-scheme: dark) { .error { color: #ff6b5e; } }
-
-        /* Flow tabs */
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab {
-            flex: 1 1 auto;
-            min-width: 120px;
-            background: var(--card);
-            color: var(--muted);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 14px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.12s ease;
-        }
-        .tab:hover { color: var(--text); border-color: var(--accent); }
-        .tab.active {
-            background: var(--accent);
-            color: #fff;
-            border-color: var(--accent);
-            box-shadow: var(--shadow);
-        }
-        @media (prefers-color-scheme: dark) { .tab.active { color: #15121f; } }
-        .flowdesc { font-size: 14px; color: var(--muted); margin: 0 0 16px; }
-
-        /* API surface */
-        .apigroup {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: var(--accent);
-            margin: 18px 0 10px;
-        }
-        .apigroup:first-child { margin-top: 0; }
-        .fn { padding: 12px 0; border-bottom: 1px solid var(--border); }
-        .fn:last-child { border-bottom: none; padding-bottom: 0; }
-        .fn-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-        .fn-name { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 700; }
-        .fn-sig {
-            margin: 0 0 6px;
-            font-size: 12.5px;
-            background: var(--code-bg);
-            white-space: pre;
-        }
-        .fn-desc { font-size: 14px; color: var(--muted); }
-        .tag {
-            display: inline-block;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 999px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-        }
-        .tag-new { background: var(--green-soft); color: var(--green); }
-        .tag-changed { background: var(--amber-soft); color: var(--amber); }
-        .tag-removed { background: var(--red-soft); color: var(--red); }
-        .changelog { margin: 0; padding: 0; list-style: none; }
-        .changelog li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-        .changelog li:last-child { border-bottom: none; }
-        .changelog code {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            font-size: 13px;
-            background: var(--code-bg);
-            padding: 1px 6px;
-            border-radius: 6px;
-        }
-        .empty { font-size: 14px; color: var(--muted); }
     </style>
 </head>
 <body>
     <div class="wrap">
         <header>
             <h1>Almatar SDK — Integration Requirements</h1>
-            <div class="sub">Pick your SDK version and integration flow to see the exact build requirements and public API.</div>
+            <div class="sub">Pick your SDK version to see the exact build requirements.</div>
         </header>
 
         <div class="card">
@@ -220,10 +137,7 @@
             </div>
         </div>
 
-        <div id="shared"></div>
-
-        <div class="tabs" id="flowTabs" role="tablist"></div>
-        <div id="flowpanel"></div>
+        <div id="content"></div>
 
         <div class="foot" id="foot"></div>
     </div>
@@ -240,13 +154,6 @@
             jdk: "JDK"
         };
         const REQ_ORDER = ["gradle", "agp", "kotlin", "ksp", "compileSdk", "minSdk", "targetSdk", "jdk"];
-
-        // Fallback flow definitions if sdk-versions.json has no "flows" block.
-        const DEFAULT_FLOWS = [
-            { id: "b2c", name: "B2C", desc: "", init: "" },
-            { id: "b2b", name: "B2B", desc: "", init: "" },
-            { id: "sso", name: "B2B with SSO", desc: "", init: "" }
-        ];
 
         function esc(s) {
             return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -286,6 +193,21 @@
                 + `}`;
         }
 
+        function render(data, entry, isLatest) {
+            document.getElementById("latestBadge").hidden = !isLatest;
+            document.getElementById("releaseMeta").textContent =
+                entry.releaseDate ? "Released " + entry.releaseDate : "";
+
+            let html = "";
+            html += `<div class="card"><h2>Build requirements</h2>${requirementsTable(entry.requirements || {})}</div>`;
+            html += codeCard("Add the dependency", dependencySnippet(data, entry.version));
+            html += codeCard("Maven repository", repoSnippet(data));
+            if (entry.notes && entry.notes.trim()) {
+                html += `<div class="card"><h2>Notes</h2><div class="notes">${esc(entry.notes)}</div></div>`;
+            }
+            document.getElementById("content").innerHTML = html;
+        }
+
         // Newest-first semantic sort.
         function cmpVer(a, b) {
             const pa = a.split(".").map(n => parseInt(n, 10) || 0);
@@ -295,94 +217,6 @@
                 if (d !== 0) return d;
             }
             return 0;
-        }
-
-        function inFlow(fn, flowId) {
-            return !fn.flows || !fn.flows.length || fn.flows.indexOf(flowId) !== -1;
-        }
-
-        // Replay every version's api changes from oldest up to targetVersion, keeping
-        // the surviving function surface. Returns [{ fn, addedIn, changedIn }].
-        function fullApiAsOf(allVersions, targetVersion) {
-            const asc = allVersions.slice().sort((a, b) => cmpVer(b.version, a.version));
-            const map = new Map();
-            for (const v of asc) {
-                const api = v.api || {};
-                (api.added || []).forEach(fn => map.set(fn.name, { fn, addedIn: v.version, changedIn: null }));
-                (api.changed || []).forEach(fn => {
-                    const prev = map.get(fn.name);
-                    map.set(fn.name, { fn, addedIn: prev ? prev.addedIn : v.version, changedIn: v.version });
-                });
-                (api.removed || []).forEach(fn => map.delete(fn.name));
-                if (v.version === targetVersion) break;
-            }
-            return Array.from(map.values());
-        }
-
-        function apiSurfaceCard(allVersions, entry, flowId) {
-            const fns = fullApiAsOf(allVersions, entry.version).filter(x => inFlow(x.fn, flowId));
-            if (!fns.length) {
-                return `<div class="card"><h2>Public API</h2><p class="empty">No functions documented for this flow.</p></div>`;
-            }
-            const groups = {};
-            const order = [];
-            fns.forEach(item => {
-                const g = item.fn.group || "API";
-                if (!(g in groups)) { groups[g] = []; order.push(g); }
-                groups[g].push(item);
-            });
-            let inner = "";
-            order.forEach(g => {
-                inner += `<div class="apigroup">${esc(g)}</div>`;
-                groups[g].forEach(({ fn, addedIn, changedIn }) => {
-                    let tag = "";
-                    if (addedIn === entry.version) tag = `<span class="tag tag-new">New</span>`;
-                    else if (changedIn === entry.version) tag = `<span class="tag tag-changed">Changed in ${esc(entry.version)}</span>`;
-                    inner += `<div class="fn">`
-                        + `<div class="fn-head"><span class="fn-name">${esc(fn.name)}</span>${tag}</div>`
-                        + (fn.signature ? `<pre class="fn-sig">${esc(fn.signature)}</pre>` : "")
-                        + (fn.desc ? `<div class="fn-desc">${esc(fn.desc)}</div>` : "")
-                        + `</div>`;
-                });
-            });
-            return `<div class="card"><h2>Public API — ${esc(entry.version)}</h2>${inner}</div>`;
-        }
-
-        function changelogCard(entry, flowId) {
-            const api = entry.api || {};
-            const pick = arr => (arr || []).filter(fn => inFlow(fn, flowId));
-            const added = pick(api.added), changed = pick(api.changed), removed = pick(api.removed);
-            if (!added.length && !changed.length && !removed.length) return "";
-            const section = (label, cls, items) => items.map(fn =>
-                `<li><span class="tag ${cls}">${label}</span> <code>${esc(fn.name)}</code>`
-                + (fn.desc ? ` — ${esc(fn.desc)}` : "") + `</li>`).join("");
-            const rows = section("Added", "tag-new", added)
-                + section("Changed", "tag-changed", changed)
-                + section("Removed", "tag-removed", removed);
-            return `<div class="card"><h2>What's new in ${esc(entry.version)}</h2><ul class="changelog">${rows}</ul></div>`;
-        }
-
-        function renderShared(data, entry, isLatest) {
-            document.getElementById("latestBadge").hidden = !isLatest;
-            document.getElementById("releaseMeta").textContent =
-                entry.releaseDate ? "Released " + entry.releaseDate : "";
-            let html = "";
-            html += `<div class="card"><h2>Build requirements</h2>${requirementsTable(entry.requirements || {})}</div>`;
-            html += codeCard("Add the dependency", dependencySnippet(data, entry.version));
-            html += codeCard("Maven repository", repoSnippet(data));
-            if (entry.notes && entry.notes.trim()) {
-                html += `<div class="card"><h2>Notes</h2><div class="notes">${esc(entry.notes)}</div></div>`;
-            }
-            document.getElementById("shared").innerHTML = html;
-        }
-
-        function renderFlow(data, entry, flow) {
-            let html = "";
-            if (flow.desc) html += `<p class="flowdesc">${esc(flow.desc)}</p>`;
-            if (flow.init) html += codeCard("Initialize (" + flow.name + ")", flow.init);
-            html += changelogCard(entry, flow.id);
-            html += apiSurfaceCard(data.versions, entry, flow.id);
-            document.getElementById("flowpanel").innerHTML = html;
         }
 
         document.addEventListener("click", e => {
@@ -404,7 +238,7 @@
                 if (!res.ok) throw new Error("HTTP " + res.status);
                 data = await res.json();
             } catch (err) {
-                document.getElementById("shared").innerHTML =
+                document.getElementById("content").innerHTML =
                     `<div class="card"><p class="error">Couldn't load <code>sdk-versions.json</code>.</p>`
                     + `<p class="notes">Open this page over HTTP (GitHub Pages or a local server such as `
                     + `<code>python3 -m http.server</code>) rather than from the file system.</p></div>`;
@@ -412,10 +246,9 @@
             }
 
             const versions = (data.versions || []).slice().sort((a, b) => cmpVer(a.version, b.version));
-            const flows = (data.flows && data.flows.length) ? data.flows : DEFAULT_FLOWS;
             const sel = document.getElementById("versionSelect");
             if (!versions.length) {
-                document.getElementById("shared").innerHTML =
+                document.getElementById("content").innerHTML =
                     `<div class="card"><p class="notes">No versions published yet.</p></div>`;
                 return;
             }
@@ -426,50 +259,17 @@
                 sel.appendChild(opt);
             });
 
-            let currentVersion = versions[0].version;
-            let currentFlow = flows[0].id;
-
-            // Build flow tabs.
-            const tabsEl = document.getElementById("flowTabs");
-            flows.forEach(f => {
-                const b = document.createElement("button");
-                b.className = "tab" + (f.id === currentFlow ? " active" : "");
-                b.textContent = f.name;
-                b.setAttribute("role", "tab");
-                b.dataset.flow = f.id;
-                b.addEventListener("click", () => {
-                    currentFlow = f.id;
-                    [...tabsEl.children].forEach(c => c.classList.toggle("active", c.dataset.flow === f.id));
-                    drawFlow();
-                });
-                tabsEl.appendChild(b);
-            });
-
-            function entryFor(version) {
-                return versions.find(v => v.version === version) || versions[0];
+            function show(version) {
+                const entry = versions.find(v => v.version === version) || versions[0];
+                render(data, entry, entry.version === versions[0].version);
             }
-            function drawShared() {
-                const entry = entryFor(currentVersion);
-                renderShared(data, entry, entry.version === versions[0].version);
-            }
-            function drawFlow() {
-                const entry = entryFor(currentVersion);
-                const flow = flows.find(f => f.id === currentFlow) || flows[0];
-                renderFlow(data, entry, flow);
-            }
-
-            sel.addEventListener("change", () => {
-                currentVersion = sel.value;
-                drawShared();
-                drawFlow();
-            });
-            sel.value = currentVersion;
-            drawShared();
-            drawFlow();
+            sel.addEventListener("change", () => show(sel.value));
+            sel.value = versions[0].version;
+            show(sel.value);
 
             document.getElementById("foot").textContent =
                 data.artifact + " · " + versions.length + " version"
-                + (versions.length === 1 ? "" : "s") + " · " + flows.length + " flows · generated from sdk-versions.json";
+                + (versions.length === 1 ? "" : "s") + " · generated from sdk-versions.json";
         }
 
         init();

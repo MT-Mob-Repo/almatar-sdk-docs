@@ -1,6 +1,10 @@
 {
     "artifact": "com.almatar:core-gms",
     "mavenRepo": "https://maven.pkg.github.com/MT-Mob-Repo/Almatar_General_SDK",
+    "settingsPlugin": {
+        "id": "com.almatar.settings",
+        "version": "2.0.9"
+    },
     "flows": [
         {
             "id": "b2c",

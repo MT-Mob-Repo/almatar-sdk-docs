@@ -202,6 +202,36 @@
             border-radius: 6px;
         }
         .empty { font-size: 14px; color: var(--muted); }
+
+        /* Required settings-plugin card */
+        .card.required { border-color: var(--accent); }
+        .card.required h2 { color: var(--accent); display: flex; align-items: center; gap: 8px; }
+        .badge-req {
+            background: var(--accent);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        @media (prefers-color-scheme: dark) { .badge-req { color: #15121f; } }
+        .dialects { display: flex; gap: 6px; margin: 4px 0 14px; flex-wrap: wrap; }
+        .dialect {
+            background: var(--card);
+            color: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+        .dialect:hover { color: var(--text); border-color: var(--accent); }
+        .dialect.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        @media (prefers-color-scheme: dark) { .dialect.active { color: #15121f; } }
     </style>
 </head>
 <body>
@@ -286,6 +316,71 @@
                 + `}`;
         }
 
+        function settingsPluginCard(data) {
+            const sp = data.settingsPlugin;
+            if (!sp) return "";
+            const repo = data.mavenRepo, id = sp.id, ver = sp.version;
+            const block = (urlLine, credUser, credPass, pluginLine) =>
+                `pluginManagement {\n`
+                + `    repositories {\n`
+                + `        gradlePluginPortal()\n`
+                + `        google()\n`
+                + `        mavenCentral()\n`
+                + `        // Almatar SDK plugin repository\n`
+                + `        maven {\n`
+                + `            ${urlLine}\n`
+                + `            credentials {\n`
+                + `                ${credUser}\n`
+                + `                ${credPass}\n`
+                + `            }\n`
+                + `        }\n`
+                + `    }\n`
+                + `    plugins {\n`
+                + `        ${pluginLine}   // required by the Almatar SDK\n`
+                + `    }\n`
+                + `}`;
+            const dialects = [
+                {
+                    key: "kts", label: "settings.gradle.kts",
+                    code: block(
+                        `url = uri("${repo}")`,
+                        `username = providers.gradleProperty("gpr.user").get()`,
+                        `password = providers.gradleProperty("gpr.key").get()`,
+                        `id("${id}") version "${ver}"`)
+                },
+                {
+                    key: "groovy", label: "settings.gradle (Groovy)",
+                    code: block(
+                        `url = uri("${repo}")`,
+                        `username = providers.gradleProperty('gpr.user').get()`,
+                        `password = providers.gradleProperty('gpr.key').get()`,
+                        `id '${id}' version '${ver}'`)
+                },
+                {
+                    key: "legacy", label: "settings.gradle (legacy Groovy)",
+                    code: block(
+                        `url '${repo}'`,
+                        `username = providers.gradleProperty('gpr.user').get()`,
+                        `password = providers.gradleProperty('gpr.key').get()`,
+                        `id '${id}' version '${ver}'`)
+                }
+            ];
+            const btns = dialects.map((d, i) =>
+                `<button class="dialect${i === 0 ? " active" : ""}" data-dialect="${d.key}">${esc(d.label)}</button>`).join("");
+            const blocks = dialects.map((d, i) => {
+                const cid = "sp_" + d.key;
+                return `<div class="dialect-block" data-dialect="${d.key}"${i === 0 ? "" : " hidden"}>`
+                    + `<div class="codeblock"><button class="copy" data-target="${cid}">Copy</button>`
+                    + `<pre id="${cid}">${esc(d.code)}</pre></div></div>`;
+            }).join("");
+            return `<div class="card required">`
+                + `<h2>Settings plugin <span class="badge-req">Required · all versions</span></h2>`
+                + `<p class="notes">Every integration must apply the <code>${esc(id)}</code> plugin in `
+                + `<code>settings.gradle(.kts)</code> under <code>pluginManagement</code> — add the plugin `
+                + `repository and the plugin as shown.</p>`
+                + `<div class="dialects">${btns}</div>${blocks}</div>`;
+        }
+
         // Newest-first semantic sort.
         function cmpVer(a, b) {
             const pa = a.split(".").map(n => parseInt(n, 10) || 0);
@@ -367,9 +462,10 @@
             document.getElementById("releaseMeta").textContent =
                 entry.releaseDate ? "Released " + entry.releaseDate : "";
             let html = "";
+            html += settingsPluginCard(data);
             html += `<div class="card"><h2>Build requirements</h2>${requirementsTable(entry.requirements || {})}</div>`;
             html += codeCard("Add the dependency", dependencySnippet(data, entry.version));
-            html += codeCard("Maven repository", repoSnippet(data));
+            html += codeCard("Maven repository (dependencies)", repoSnippet(data));
             if (entry.notes && entry.notes.trim()) {
                 html += `<div class="card"><h2>Notes</h2><div class="notes">${esc(entry.notes)}</div></div>`;
             }
@@ -384,6 +480,16 @@
             html += apiSurfaceCard(data.versions, entry, flow.id);
             document.getElementById("flowpanel").innerHTML = html;
         }
+
+        document.addEventListener("click", e => {
+            const d = e.target.closest(".dialect");
+            if (!d) return;
+            const card = d.closest(".card");
+            if (!card) return;
+            const key = d.dataset.dialect;
+            card.querySelectorAll(".dialect").forEach(b => b.classList.toggle("active", b === d));
+            card.querySelectorAll(".dialect-block").forEach(b => { b.hidden = b.dataset.dialect !== key; });
+        });
 
         document.addEventListener("click", e => {
             const btn = e.target.closest(".copy");

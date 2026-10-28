@@ -38,7 +38,8 @@
                 "minSdk": 26,
                 "jdk": 17
             },
-            "notes": ""
+            "notes": "",
+            "settingsPluginVersion": "2.0.9"
         },
         {
             "version": "1.0.3",
@@ -52,6 +53,7 @@
                 "minSdk": 26,
                 "jdk": 17
             },
+            "settingsPluginVersion": "2.0.9",
             "notes": "",
             "api": {
                 "added": [

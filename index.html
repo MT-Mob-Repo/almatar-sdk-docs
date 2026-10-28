@@ -316,10 +316,12 @@
                 + `}`;
         }
 
-        function settingsPluginCard(data) {
+        function settingsPluginCard(data, entry) {
             const sp = data.settingsPlugin;
             if (!sp) return "";
-            const repo = data.mavenRepo, id = sp.id, ver = sp.version;
+            // Plugin version can differ per SDK version; fall back to the global default.
+            const ver = (entry && entry.settingsPluginVersion) || sp.version;
+            const repo = data.mavenRepo, id = sp.id;
             const block = (urlLine, credUser, credPass, pluginLine) =>
                 `pluginManagement {\n`
                 + `    repositories {\n`
@@ -373,9 +375,11 @@
                     + `<div class="codeblock"><button class="copy" data-target="${cid}">Copy</button>`
                     + `<pre id="${cid}">${esc(d.code)}</pre></div></div>`;
             }).join("");
+            const forVer = entry && entry.version ? " · SDK " + esc(entry.version) : "";
             return `<div class="card required">`
-                + `<h2>Settings plugin <span class="badge-req">Required · all versions</span></h2>`
-                + `<p class="notes">Every integration must apply the <code>${esc(id)}</code> plugin in `
+                + `<h2>Settings plugin <span class="badge-req">Required${forVer}</span></h2>`
+                + `<p class="notes">Every integration must apply the <code>${esc(id)}</code> plugin `
+                + `(version <strong>${esc(ver)}</strong> for this SDK version) in `
                 + `<code>settings.gradle(.kts)</code> under <code>pluginManagement</code> — add the plugin `
                 + `repository and the plugin as shown.</p>`
                 + `<div class="dialects">${btns}</div>${blocks}</div>`;
@@ -462,7 +466,7 @@
             document.getElementById("releaseMeta").textContent =
                 entry.releaseDate ? "Released " + entry.releaseDate : "";
             let html = "";
-            html += settingsPluginCard(data);
+            html += settingsPluginCard(data, entry);
             html += `<div class="card"><h2>Build requirements</h2>${requirementsTable(entry.requirements || {})}</div>`;
             html += codeCard("Add the dependency", dependencySnippet(data, entry.version));
             html += codeCard("Maven repository (dependencies)", repoSnippet(data));

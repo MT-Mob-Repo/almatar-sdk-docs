@@ -160,6 +160,9 @@
 
         /* Variant tabs (without / with tracking), inside the version card */
         .variant-tabs { margin: 16px 0 0; }
+        /* .tabs sets display:flex, which would otherwise override the hidden attribute. */
+        .variant-tabs[hidden] { display: none; }
+        .variant-desc:empty { display: none; }
         .variant-desc { margin: 12px 0 0; }
 
         /* Tracking tools + permissions */

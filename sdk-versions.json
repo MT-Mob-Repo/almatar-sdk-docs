@@ -5,6 +5,18 @@
         "id": "com.almatar.settings",
         "version": "2.0.9"
     },
+    "variants": [
+        {
+            "id": "clean",
+            "name": "SDK without tracking",
+            "desc": "Only the Almatar SDK. No analytics, attribution, engagement or session-replay tools are included, and the SDK's analytics calls do nothing."
+        },
+        {
+            "id": "tracking",
+            "name": "SDK with tracking tools",
+            "desc": "The Almatar SDK plus the optional com.almatar:analytics-tracking add-on. Tracking runs only inside the Almatar flows (hotel, flight and bookings screens). The add-on registers itself at app startup, so no code changes are needed."
+        }
+    ],
     "flows": [
         {
             "id": "b2c",
@@ -26,6 +38,59 @@
         }
     ],
     "versions": [
+        {
+            "version": "1.0.0-alpha01",
+            "releaseDate": "2026-11-02",
+            "requirements": {
+                "gradle": "9.8.0",
+                "agp": "9.4.1",
+                "kotlin": "2.4.20",
+                "ksp": "2.3.12",
+                "compileSdk": 37,
+                "minSdk": 26,
+                "jdk": 17
+            },
+            "notes": "First tracking-free release: the tracking tools moved out of core-gms into the optional com.almatar:analytics-tracking add-on. Pin this exact version. Gradle ranks 1.0.0-alpha01 below 1.0.5, so a version range or 'latest' resolves to 1.0.5, which still bundles the tracking tools.",
+            "settingsPluginVersion": "3.0.0",
+            "variants": {
+                "clean": {
+                    "permissions": [
+                        { "name": "android.permission.INTERNET", "from": "Almatar SDK, payments" },
+                        { "name": "android.permission.ACCESS_NETWORK_STATE", "from": "Almatar SDK, payments" },
+                        { "name": "android.permission.WAKE_LOCK", "from": "Almatar SDK" },
+                        { "name": "android.permission.ACCESS_WIFI_STATE", "from": "OPPWA payments SDK" },
+                        { "name": "android.permission.NFC", "from": "OPPWA payments SDK (card reading)" },
+                        { "name": "android.permission.USE_FINGERPRINT", "from": "OPPWA payments SDK" },
+                        { "name": "com.google.android.providers.gsf.permission.READ_GSERVICES", "from": "Fingerprint Pro, used by Checkout.com fraud checks" }
+                    ]
+                },
+                "tracking": {
+                    "settingsPluginId": "com.almatar.settings.tracking",
+                    "addons": [ "com.almatar:analytics-tracking:1.0.6" ],
+                    "tools": [
+                        { "name": "UXCam", "version": "3.11.2", "purpose": "Session replay and heatmaps; passenger and payment fields are masked" },
+                        { "name": "Insider", "version": "14.10.4", "purpose": "Customer engagement and product events" },
+                        { "name": "WebEngage", "version": "5.2.0", "purpose": "Customer engagement and journey events" },
+                        { "name": "Adjust", "version": "5.8.0", "purpose": "Install attribution and conversion events" },
+                        { "name": "Mixpanel", "version": "8.11.1", "purpose": "Product analytics and feature experiments" },
+                        { "name": "Firebase Analytics", "version": "24.0.0", "purpose": "App analytics events" },
+                        { "name": "Firebase Messaging", "version": "26.0.0", "purpose": "Push notifications for the engagement tools" }
+                    ],
+                    "extraPermissions": [
+                        { "name": "com.google.android.gms.permission.AD_ID", "from": "Adjust, Firebase Analytics" },
+                        { "name": "android.permission.ACCESS_ADSERVICES_AD_ID", "from": "Firebase Analytics" },
+                        { "name": "android.permission.ACCESS_ADSERVICES_ATTRIBUTION", "from": "Firebase Analytics" },
+                        { "name": "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE", "from": "Firebase Analytics (install referrer)" },
+                        { "name": "android.permission.RECEIVE_BOOT_COMPLETED", "from": "Insider, WorkManager" },
+                        { "name": "android.permission.FOREGROUND_SERVICE", "from": "WorkManager (via the tracking tools)" },
+                        { "name": "android.permission.POST_NOTIFICATIONS", "from": "Firebase Messaging" },
+                        { "name": "com.google.android.c2dm.permission.RECEIVE", "from": "Firebase Messaging" },
+                        { "name": "android.permission.BLUETOOTH", "from": "Mixpanel" },
+                        { "name": "android.permission.BROADCAST_CLOSE_SYSTEM_DIALOGS", "from": "WebEngage" }
+                    ]
+                }
+            }
+        },
         {
             "version": "1.0.5",
             "releaseDate": "2026-10-28",

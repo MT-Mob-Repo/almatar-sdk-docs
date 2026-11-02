@@ -158,6 +158,24 @@
         @media (prefers-color-scheme: dark) { .tab.active { color: #15121f; } }
         .flowdesc { font-size: 14px; color: var(--muted); margin: 0 0 16px; }
 
+        /* Variant tabs (without / with tracking), inside the version card */
+        .variant-tabs { margin: 16px 0 0; }
+        .variant-desc { margin: 12px 0 0; }
+
+        /* Tracking tools + permissions */
+        td.perm {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12.5px;
+            word-break: break-all;
+            padding-right: 12px;
+        }
+        td.src { color: var(--muted); font-size: 13px; text-align: right; width: 40%; }
+        td.tool { font-weight: 600; white-space: nowrap; padding-right: 12px; }
+        td.tool .ver { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 4px; }
+        td.purpose { color: var(--muted); font-size: 14px; }
+        .subhead { font-size: 13px; font-weight: 700; margin: 18px 0 4px; }
+        .subhead:first-of-type { margin-top: 0; }
+
         /* API surface */
         .apigroup {
             font-size: 12px;
@@ -248,6 +266,8 @@
                 <span id="latestBadge" class="badge" hidden>Latest</span>
                 <span id="releaseMeta" class="meta"></span>
             </div>
+            <div class="tabs variant-tabs" id="variantTabs" role="tablist" hidden></div>
+            <p class="notes variant-desc" id="variantDesc"></p>
         </div>
 
         <div id="shared"></div>
@@ -301,8 +321,40 @@
                 + `<pre id="${id}">${esc(code)}</pre></div></div>`;
         }
 
-        function dependencySnippet(data, version) {
-            return `dependencies {\n    implementation("${data.artifact}:${version}")\n}`;
+        function dependencySnippet(data, version, addons) {
+            const extra = (addons || []).map(a => `\n    implementation("${a}")   // tracking tools`).join("");
+            return `dependencies {\n    implementation("${data.artifact}:${version}")${extra}\n}`;
+        }
+
+        function permissionsTable(perms) {
+            const rows = perms.map(p =>
+                `<tr><td class="perm">${esc(p.name)}</td><td class="src">${esc(p.from || "")}</td></tr>`).join("");
+            return `<table>${rows}</table>`;
+        }
+
+        // "What's included" card for the selected variant of a version that ships both.
+        function variantCard(entry, variantId) {
+            const v = (entry.variants || {})[variantId];
+            if (!v) return "";
+            const clean = (entry.variants || {}).clean || {};
+            if (variantId === "clean") {
+                return `<div class="card"><h2>What's included</h2>`
+                    + `<p class="notes">No tracking tools: UXCam, Insider, WebEngage, Adjust, Mixpanel and `
+                    + `Firebase Analytics / Messaging are not part of this build.</p>`
+                    + (clean.permissions && clean.permissions.length
+                        ? `<div class="subhead">Permissions the SDK adds to your app</div>${permissionsTable(clean.permissions)}`
+                        : "")
+                    + `</div>`;
+            }
+            const tools = (v.tools || []).map(t =>
+                `<tr><td class="tool">${esc(t.name)}<span class="ver">${esc(t.version || "")}</span></td>`
+                + `<td class="purpose">${esc(t.purpose || "")}</td></tr>`).join("");
+            return `<div class="card"><h2>What's included</h2>`
+                + (tools ? `<div class="subhead">Tracking tools</div><table>${tools}</table>` : "")
+                + (v.extraPermissions && v.extraPermissions.length
+                    ? `<div class="subhead">Extra permissions, on top of the SDK without tracking</div>${permissionsTable(v.extraPermissions)}`
+                    : "")
+                + `</div>`;
         }
 
         function repoSnippet(data) {
@@ -316,12 +368,12 @@
                 + `}`;
         }
 
-        function settingsPluginCard(data, entry) {
+        function settingsPluginCard(data, entry, pluginId) {
             const sp = data.settingsPlugin;
             if (!sp) return "";
             // Plugin version can differ per SDK version; fall back to the global default.
             const ver = (entry && entry.settingsPluginVersion) || sp.version;
-            const repo = data.mavenRepo, id = sp.id;
+            const repo = data.mavenRepo, id = pluginId || sp.id;
             const block = (urlLine, credUser, credPass, pluginLine) =>
                 `pluginManagement {\n`
                 + `    repositories {\n`
@@ -385,15 +437,28 @@
                 + `<div class="dialects">${btns}</div>${blocks}</div>`;
         }
 
-        // Newest-first semantic sort.
+        // Newest-first semantic sort; a pre-release (1.0.0-alpha01) sorts below its release (1.0.0).
         function cmpVer(a, b) {
-            const pa = a.split(".").map(n => parseInt(n, 10) || 0);
-            const pb = b.split(".").map(n => parseInt(n, 10) || 0);
+            const [ca, pra = ""] = a.split(/-(.*)/s);
+            const [cb, prb = ""] = b.split(/-(.*)/s);
+            const pa = ca.split(".").map(n => parseInt(n, 10) || 0);
+            const pb = cb.split(".").map(n => parseInt(n, 10) || 0);
             for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
                 const d = (pb[i] || 0) - (pa[i] || 0);
                 if (d !== 0) return d;
             }
-            return 0;
+            if (pra === prb) return 0;
+            if (!pra) return -1;
+            if (!prb) return 1;
+            return prb.localeCompare(pra, undefined, { numeric: true });
+        }
+
+        // Newest release first. Release date wins over the version number, so a new line such as
+        // 1.0.0-alpha01 (released after 1.0.5) is listed, and selected, first.
+        function cmpRelease(a, b) {
+            const da = a.releaseDate || "", db = b.releaseDate || "";
+            if (da !== db) return db.localeCompare(da);
+            return cmpVer(a.version, b.version);
         }
 
         function inFlow(fn, flowId) {
@@ -403,7 +468,7 @@
         // Replay every version's api changes from oldest up to targetVersion, keeping
         // the surviving function surface. Returns [{ fn, addedIn, changedIn }].
         function fullApiAsOf(allVersions, targetVersion) {
-            const asc = allVersions.slice().sort((a, b) => cmpVer(b.version, a.version));
+            const asc = allVersions.slice().sort((a, b) => cmpRelease(b, a));
             const map = new Map();
             for (const v of asc) {
                 const api = v.api || {};
@@ -461,14 +526,22 @@
             return `<div class="card"><h2>What's new in ${esc(entry.version)}</h2><ul class="changelog">${rows}</ul></div>`;
         }
 
-        function renderShared(data, entry, isLatest) {
+        function renderShared(data, entry, isLatest, variantId) {
             document.getElementById("latestBadge").hidden = !isLatest;
             document.getElementById("releaseMeta").textContent =
                 entry.releaseDate ? "Released " + entry.releaseDate : "";
+            // Versions without a "variants" block bundle the tracking tools in core.
+            const variant = entry.variants ? entry.variants[variantId] || {} : null;
             let html = "";
-            html += settingsPluginCard(data, entry);
+            if (!variant) {
+                html += `<div class="card"><h2>Tracking tools</h2><p class="notes">This version bundles the `
+                    + `tracking tools (UXCam, Insider, WebEngage, Adjust, Mixpanel, Firebase) inside `
+                    + `<code>${esc(data.artifact)}</code>. For a build without them, use the newest version.</p></div>`;
+            }
+            html += settingsPluginCard(data, entry, variant && variant.settingsPluginId);
             html += `<div class="card"><h2>Build requirements</h2>${requirementsTable(entry.requirements || {})}</div>`;
-            html += codeCard("Add the dependency", dependencySnippet(data, entry.version));
+            html += codeCard("Add the dependency", dependencySnippet(data, entry.version, variant && variant.addons));
+            if (variant) html += variantCard(entry, variantId);
             html += codeCard("Maven repository (dependencies)", repoSnippet(data));
             if (entry.notes && entry.notes.trim()) {
                 html += `<div class="card"><h2>Notes</h2><div class="notes">${esc(entry.notes)}</div></div>`;
@@ -521,7 +594,8 @@
                 return;
             }
 
-            const versions = (data.versions || []).slice().sort((a, b) => cmpVer(a.version, b.version));
+            const versions = (data.versions || []).slice().sort(cmpRelease);
+            const variants = data.variants || [];
             const flows = (data.flows && data.flows.length) ? data.flows : DEFAULT_FLOWS;
             const sel = document.getElementById("versionSelect");
             if (!versions.length) {
@@ -538,6 +612,23 @@
 
             let currentVersion = versions[0].version;
             let currentFlow = flows[0].id;
+            let currentVariant = variants.length ? variants[0].id : null;
+
+            // Build variant tabs (without / with tracking); shown only for versions that ship both.
+            const variantTabsEl = document.getElementById("variantTabs");
+            variants.forEach(v => {
+                const b = document.createElement("button");
+                b.className = "tab" + (v.id === currentVariant ? " active" : "");
+                b.textContent = v.name;
+                b.setAttribute("role", "tab");
+                b.dataset.variant = v.id;
+                b.addEventListener("click", () => {
+                    currentVariant = v.id;
+                    [...variantTabsEl.children].forEach(c => c.classList.toggle("active", c.dataset.variant === v.id));
+                    drawShared();
+                });
+                variantTabsEl.appendChild(b);
+            });
 
             // Build flow tabs.
             const tabsEl = document.getElementById("flowTabs");
@@ -560,7 +651,11 @@
             }
             function drawShared() {
                 const entry = entryFor(currentVersion);
-                renderShared(data, entry, entry.version === versions[0].version);
+                const hasVariants = !!(entry.variants && variants.length);
+                variantTabsEl.hidden = !hasVariants;
+                const vdef = variants.find(v => v.id === currentVariant);
+                document.getElementById("variantDesc").textContent = hasVariants && vdef ? vdef.desc || "" : "";
+                renderShared(data, entry, entry.version === versions[0].version, currentVariant);
             }
             function drawFlow() {
                 const entry = entryFor(currentVersion);

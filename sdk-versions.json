@@ -55,6 +55,62 @@
             "init": "// 1. Initialize in B2B mode\nAlmatarAppInitializer.init(\n    application = this,\n    baseUrl = \"<your base url>\",\n    almatarEnvironment = AlmatarEnvironment.Production,\n    supportNumber = \"<support number>\",\n    almatarUiConfig = AlmatarUiConfig(),\n    enableB2bSDK = true,\n    brandName = \"<your brand>\",\n)\n\n// 2. Launch bookings with a short-lived SSO token\nAlmatarAppInitializer.launchB2BSsoBookings(\n    shortLivedToken = token,\n    locale = LOCALE.ENGLISH,\n    almatarFlowFinishedCallback = { /* flow closed */ },\n    sdkLaunchCallback = object : SdkLaunchCallback {\n        override fun onError(error: Throwable) { /* handle */ }\n    },\n)"
         }
     ],
+    "payment": {
+        "flows": [
+            "b2c",
+            "b2b"
+        ],
+        "intro": "Every launch function that opens a search or booking flow (`launchFlights`, `launchFlightsSearchResults`, `launchHotels`, `launchHotelsSearchResults`) takes `startPaymentFlowImpl`. It decides who takes the payment when the user taps pay. The SDK checks the price, and any coupon, first.",
+        "modes": [
+            {
+                "id": "almatar",
+                "name": "Pay through Almatar",
+                "summary": "Pass `startPaymentFlowImpl = null`. Almatar shows its own payment screen, charges the user and confirms the booking. Your app has nothing else to do.",
+                "points": [
+                    "The payment screen lists the payment methods Almatar has enabled for your account, such as card, Tabby or Tamara.",
+                    "Coupons, wallet and loyalty points are hidden in SDK mode.",
+                    "After a successful payment the SDK shows its booking confirmation screen."
+                ],
+                "code": "AlmatarAppInitializer.launchHotels(\n    locale = LOCALE.ENGLISH,\n    almatarFlowFinishedCallback = { /* the user left the SDK */ },\n    generateTokenImpl = { callback -> callback(token, refreshToken, null) },\n    startPaymentFlowImpl = null, // Almatar takes the payment\n)"
+            },
+            {
+                "id": "partner",
+                "name": "Pay through your app",
+                "summary": "Pass a `startPaymentFlowImpl` function. The SDK hides its payment methods, and when the user taps pay it calls your function with the booking. You charge the user in your own checkout, then report the result back through `paymentFlowCallback`.",
+                "points": [
+                    "`bookingId`: Almatar's booking ID. Keep it with your payment record.",
+                    "`amount`: the total to charge, in the booking's base currency.",
+                    "`bookingKey`: the key that identifies the booking in Almatar.",
+                    "`productType`: `flight` or `hotel`.",
+                    "How the money you collect reaches Almatar (settlement and invoicing) is agreed with the Almatar team. It isn't set in the SDK."
+                ],
+                "code": "AlmatarAppInitializer.launchHotels(\n    locale = LOCALE.ENGLISH,\n    almatarFlowFinishedCallback = { /* the user left the SDK */ },\n    generateTokenImpl = { callback -> callback(token, refreshToken, null) },\n    startPaymentFlowImpl = { bookingId, amount, bookingKey, productType, paymentFlowCallback ->\n        paymentFlowCallback(PaymentState.LOADING)\n        // Charge the user in your own checkout.\n        myCheckout.pay(bookingId, amount) { result ->\n            when (result) {\n                is PayResult.Paid -> paymentFlowCallback(PaymentState.SUCCESS)\n                is PayResult.Cancelled -> paymentFlowCallback(PaymentState.CANCELLED)\n                is PayResult.Failed -> paymentFlowCallback(PaymentState.FAILURE(result.message))\n            }\n        }\n    },\n)",
+                "states": [
+                    {
+                        "name": "LOADING",
+                        "desc": "The SDK shows a loader over the payment screen."
+                    },
+                    {
+                        "name": "SUCCESS",
+                        "desc": "Report it only once the charge is confirmed. The SDK shows its booking confirmation screen."
+                    },
+                    {
+                        "name": "CANCELLED",
+                        "desc": "The user stays on the payment screen and can pay again."
+                    },
+                    {
+                        "name": "FAILURE(message)",
+                        "desc": "The SDK shows your message on the payment screen. The user can pay again."
+                    }
+                ],
+                "postBooking": {
+                    "summary": "Add-ons bought after booking from My Trips (for example seats or baggage) are always paid through your app. Pass `startPostPaymentFlow` to `launchBookings`. Without it, the add-on checkout closes. On `SUCCESS` the SDK shows the add-on confirmation; on `FAILURE` it shows your message and closes the checkout.",
+                    "code": "AlmatarAppInitializer.launchBookings(\n    locale = LOCALE.ENGLISH,\n    almatarFlowFinishedCallback = { /* the user left the SDK */ },\n    generateTokenImpl = { callback -> callback(token, refreshToken, null) },\n    startPostPaymentFlow = { postBookingId, bookingId, ancillaryType, paymentFlowCallback ->\n        // ancillaryType is the add-on, for example \"seat\" or \"baggage\".\n        // Charge it, then report PaymentState.SUCCESS or PaymentState.FAILURE(message).\n    },\n)"
+                }
+            }
+        ],
+        "otherFlowsNote": "Payment in this flow always goes through Almatar: `launchB2BSsoBookings` has no payment parameter."
+    },
     "versions": [
         {
             "version": "1.0.0-alpha01",

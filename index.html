@@ -178,6 +178,16 @@
         td.purpose { color: var(--muted); font-size: 14px; }
         .subhead { font-size: 13px; font-weight: 700; margin: 18px 0 4px; }
         .subhead:first-of-type { margin-top: 0; }
+        .points { margin: 0 0 14px; padding-left: 20px; font-size: 14px; color: var(--muted); }
+        .points li { margin: 4px 0; }
+        td.state { word-break: normal; white-space: nowrap; vertical-align: top; }
+        .notes code, .points code, td.purpose code, .subhead code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12.5px;
+            background: var(--code-bg);
+            padding: 1px 5px;
+            border-radius: 5px;
+        }
 
         /* API surface */
         .apigroup {
@@ -192,7 +202,7 @@
         .fn { padding: 12px 0; border-bottom: 1px solid var(--border); }
         .fn:last-child { border-bottom: none; padding-bottom: 0; }
         .fn-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-        .fn-name { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 700; }
+        .fn-name { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
         .fn-sig {
             margin: 0 0 6px;
             font-size: 12.5px;
@@ -656,10 +666,52 @@
             document.getElementById("shared").innerHTML = html;
         }
 
+        // Escapes s, then turns `x` into <code>x</code>.
+        function rich(s) {
+            return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+        }
+
+        // "Payment" card: pay through Almatar vs. through the partner's app.
+        function paymentCard(data, flowId) {
+            const p = data.payment;
+            if (!p) return "";
+            if ((p.flows || []).indexOf(flowId) === -1) {
+                return p.otherFlowsNote
+                    ? `<div class="card"><h2>Payment</h2><p class="notes">${rich(p.otherFlowsNote)}</p></div>`
+                    : "";
+            }
+            const modes = p.modes || [];
+            const btns = modes.map((m, i) =>
+                `<button class="dialect${i === 0 ? " active" : ""}" data-dialect="${m.id}">${esc(m.name)}</button>`).join("");
+            const blocks = modes.map((m, i) => {
+                let body = `<p class="notes">${rich(m.summary)}</p>`;
+                if (m.points && m.points.length) {
+                    body += `<ul class="points">${m.points.map(x => `<li>${rich(x)}</li>`).join("")}</ul>`;
+                }
+                if (m.code) body += codeBlock(m.code);
+                if (m.states && m.states.length) {
+                    body += `<div class="subhead">Report the result with <code>PaymentState</code></div><table>`
+                        + m.states.map(s => `<tr><td class="perm state">${esc(s.name)}</td>`
+                            + `<td class="purpose">${rich(s.desc)}</td></tr>`).join("")
+                        + `</table>`;
+                }
+                if (m.postBooking) {
+                    body += `<div class="subhead">Add-ons after booking</div>`
+                        + `<p class="notes">${rich(m.postBooking.summary)}</p>`
+                        + (m.postBooking.code ? codeBlock(m.postBooking.code) : "");
+                }
+                return `<div class="dialect-block" data-dialect="${m.id}"${i === 0 ? "" : " hidden"}>${body}</div>`;
+            }).join("");
+            return `<div class="card"><h2>Payment</h2>`
+                + (p.intro ? `<p class="notes">${rich(p.intro)}</p>` : "")
+                + `<div class="dialects">${btns}</div>${blocks}</div>`;
+        }
+
         function renderFlow(data, entry, flow) {
             let html = "";
             if (flow.desc) html += `<p class="flowdesc">${esc(flow.desc)}</p>`;
             if (flow.init) html += codeCard("Initialize (" + flow.name + ")", flow.init);
+            html += paymentCard(data, flow.id);
             html += changelogCard(entry, flow.id);
             html += apiSurfaceCard(data.versions, entry, flow.id);
             document.getElementById("flowpanel").innerHTML = html;

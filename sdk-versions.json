@@ -5,6 +5,24 @@
         "id": "com.almatar.settings",
         "version": "2.0.9"
     },
+    "providers": [
+        {
+            "id": "gms",
+            "name": "Google Play (GMS)",
+            "artifact": "com.almatar:core-gms",
+            "desc": "For devices with Google Play services. Uses Google Maps and Google location services."
+        },
+        {
+            "id": "hms",
+            "name": "Huawei AppGallery (HMS)",
+            "artifact": "com.almatar:core-hms",
+            "desc": "For Huawei devices without Google Play services. Uses Huawei Map Kit, Location Kit and ML Kit (document scanning) instead."
+        }
+    ],
+    "hms": {
+        "repo": "https://developer.huawei.com/repo/",
+        "agcpVersion": "1.9.6.300"
+    },
     "variants": [
         {
             "id": "clean",

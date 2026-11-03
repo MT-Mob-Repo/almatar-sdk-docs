@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Almatar SDK integration requirements and public API by version and flow (B2C, B2B, B2B with SSO) — Gradle, AGP, Kotlin, KSP, compileSdk, minSdk, JDK and functions." />
+    <meta name="description" content="Almatar SDK integration requirements and public API by version and flow (B2C, B2B, B2B with SSO), for Google Play (GMS) and Huawei (HMS) devices — Gradle, AGP, Kotlin, KSP, compileSdk, minSdk, JDK and functions." />
     <title>Almatar SDK Requirements</title>
     <style>
         :root {
@@ -259,7 +259,7 @@
     <div class="wrap">
         <header>
             <h1>Almatar SDK — Integration Requirements</h1>
-            <div class="sub">Pick your SDK version and integration flow to see the exact build requirements and public API.</div>
+            <div class="sub">Pick your SDK version and integration flow to see the exact build requirements and public API. Supports Google Play (GMS) and Huawei (HMS) devices.</div>
         </header>
 
         <div class="card">
@@ -324,9 +324,113 @@
                 + `<pre id="${id}">${esc(code)}</pre></div></div>`;
         }
 
-        function dependencySnippet(data, version, addons) {
+        function dependencySnippet(artifact, version, addons) {
             const extra = (addons || []).map(a => `\n    implementation("${a}")   // tracking tools`).join("");
-            return `dependencies {\n    implementation("${data.artifact}:${version}")${extra}\n}`;
+            return `dependencies {\n    implementation("${artifact}:${version}")${extra}\n}`;
+        }
+
+        function flavorsSnippet(gms, hms, version, addons) {
+            const extra = (addons || []).map(a => `\n    implementation("${a}")   // tracking tools`).join("");
+            return `// app/build.gradle.kts\n`
+                + `android {\n`
+                + `    flavorDimensions += "store"\n`
+                + `    productFlavors {\n`
+                + `        create("gms") { dimension = "store" }   // Google Play\n`
+                + `        create("hms") { dimension = "store" }   // Huawei AppGallery\n`
+                + `    }\n`
+                + `}\n\n`
+                + `dependencies {\n`
+                + `    "gmsImplementation"("${gms}:${version}")\n`
+                + `    "hmsImplementation"("${hms}:${version}")${extra}\n`
+                + `}`;
+        }
+
+        function hmsRepoSnippet(repo) {
+            return `// settings.gradle.kts\n`
+                + `pluginManagement {\n`
+                + `    repositories {\n`
+                + `        // ...existing repositories\n`
+                + `        maven { url = uri("${repo}") }\n`
+                + `    }\n`
+                + `}\n`
+                + `dependencyResolutionManagement {\n`
+                + `    repositories {\n`
+                + `        // ...existing repositories\n`
+                + `        maven { url = uri("${repo}") }\n`
+                + `    }\n`
+                + `}`;
+        }
+
+        function agcpSnippet(repo, agcpVersion) {
+            return `// build.gradle.kts (project root)\n`
+                + `buildscript {\n`
+                + `    repositories {\n`
+                + `        google()\n`
+                + `        mavenCentral()\n`
+                + `        maven { url = uri("${repo}") }\n`
+                + `    }\n`
+                + `    dependencies {\n`
+                + `        classpath("com.huawei.agconnect:agcp:${agcpVersion}")\n`
+                + `    }\n`
+                + `}\n\n`
+                + `// app/build.gradle.kts\n`
+                + `plugins {\n`
+                + `    id("com.android.application")\n`
+                + `    id("com.huawei.agconnect")\n`
+                + `}`;
+        }
+
+        function codeBlock(code) {
+            const id = "c" + Math.random().toString(36).slice(2, 8);
+            return `<div class="codeblock"><button class="copy" data-target="${id}">Copy</button>`
+                + `<pre id="${id}">${esc(code)}</pre></div>`;
+        }
+
+        // "Add the dependency" card with Google Play / Huawei / both-stores toggles.
+        function dependencyCard(data, entry, addons) {
+            const providers = data.providers || [];
+            const gms = providers.find(p => p.id === "gms");
+            const hms = providers.find(p => p.id === "hms");
+            if (!gms || !hms) return codeCard("Add the dependency", dependencySnippet(data.artifact, entry.version, addons));
+            const h = data.hms || {};
+            const pushNote = addons && addons.length
+                ? `<p class="notes">The tracking tools' push notifications use Firebase Messaging, which needs `
+                    + `Google Play services. On Huawei devices without them, those notifications won't arrive.</p>`
+                : "";
+            const hmsSetup = `<div class="subhead">Huawei setup</div>`
+                + `<p class="notes">1. Add Huawei's Maven repository. The Almatar settings plugin doesn't add it.</p>`
+                + codeBlock(hmsRepoSnippet(h.repo))
+                + `<p class="notes">2. Apply the AppGallery Connect plugin.</p>`
+                + codeBlock(agcpSnippet(h.repo, h.agcpVersion))
+                + `<p class="notes">3. In AppGallery Connect, register your app, enable <strong>Map Kit</strong> and `
+                + `<strong>Location Kit</strong>, and add your signing certificate's SHA-256 fingerprint. Download `
+                + `<code>agconnect-services.json</code> and put it in <code>app/</code>.</p>`
+                + pushNote;
+            const options = [
+                {
+                    key: "gms", label: gms.name, desc: gms.desc,
+                    body: codeBlock(dependencySnippet(gms.artifact, entry.version, addons))
+                },
+                {
+                    key: "hms", label: hms.name, desc: hms.desc,
+                    body: codeBlock(dependencySnippet(hms.artifact, entry.version, addons)) + hmsSetup
+                },
+                {
+                    key: "both", label: "Both stores",
+                    desc: "Publishing to Google Play and Huawei AppGallery? Use a product flavor per store. Never put "
+                        + "core-gms and core-hms in the same build variant: they contain the same classes.",
+                    body: codeBlock(flavorsSnippet(gms.artifact, hms.artifact, entry.version, addons)) + hmsSetup
+                }
+            ];
+            const btns = options.map((o, i) =>
+                `<button class="dialect${i === 0 ? " active" : ""}" data-dialect="${o.key}">${esc(o.label)}</button>`).join("");
+            const blocks = options.map((o, i) =>
+                `<div class="dialect-block" data-dialect="${o.key}"${i === 0 ? "" : " hidden"}>`
+                + `<p class="notes">${esc(o.desc)}</p>${o.body}</div>`).join("");
+            return `<div class="card"><h2>Add the dependency</h2>`
+                + `<p class="notes">The SDK supports Google Play (GMS) and Huawei (HMS) devices. Pick the build for `
+                + `the store you publish to.</p>`
+                + `<div class="dialects">${btns}</div>${blocks}</div>`;
         }
 
         function permissionsTable(perms) {
@@ -539,11 +643,11 @@
             if (!variant) {
                 html += `<div class="card"><h2>Tracking tools</h2><p class="notes">This version bundles the `
                     + `tracking tools (UXCam, Insider, WebEngage, Adjust, Mixpanel, Firebase) inside `
-                    + `<code>${esc(data.artifact)}</code>. For a build without them, use the newest version.</p></div>`;
+                    + `<code>core-gms</code> and <code>core-hms</code>. For a build without them, use the newest version.</p></div>`;
             }
             html += settingsPluginCard(data, entry, variant && variant.settingsPluginId);
             html += `<div class="card"><h2>Build requirements</h2>${requirementsTable(entry.requirements || {})}</div>`;
-            html += codeCard("Add the dependency", dependencySnippet(data, entry.version, variant && variant.addons));
+            html += dependencyCard(data, entry, variant && variant.addons);
             if (variant) html += variantCard(entry, variantId);
             html += codeCard("Maven repository (dependencies)", repoSnippet(data));
             if (entry.notes && entry.notes.trim()) {

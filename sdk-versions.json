@@ -111,6 +111,100 @@
         ],
         "otherFlowsNote": "Payment in this flow always goes through Almatar: `launchB2BSsoBookings` has no payment parameter."
     },
+    "customization": {
+        "intro": "SDK screens follow the `almatarUiConfig` you pass to `AlmatarAppInitializer.init`. Every field is optional: leave one out to keep Almatar's look.",
+        "sections": [
+            {
+                "id": "colors",
+                "title": "Brand colors",
+                "since": "Next release",
+                "summary": "Pass your brand colors in code with `colors = AlmatarColors(...)`, instead of overriding Almatar's color resources in XML. Each color fills every Almatar color that plays that role, so you set a few colors, not each resource.",
+                "fields": [
+                    {
+                        "name": "primary",
+                        "desc": "Buttons, links, selected tabs and icons."
+                    },
+                    {
+                        "name": "onPrimary",
+                        "desc": "Text on primary buttons."
+                    },
+                    {
+                        "name": "primaryContainer",
+                        "desc": "A light tint of `primary` behind chips, inputs and selected cards."
+                    },
+                    {
+                        "name": "highlightText",
+                        "desc": "Highlighted text, for example on `primaryContainer`."
+                    },
+                    {
+                        "name": "overrides",
+                        "desc": "Any other Almatar color: a map from `com.almatar.core.R.color.*` to a color. Applied last."
+                    }
+                ],
+                "codes": [
+                    {
+                        "label": "Fixed colors",
+                        "code": "AlmatarAppInitializer.init(\n    // ...\n    almatarUiConfig = AlmatarUiConfig(\n        colors = AlmatarColors(\n            primary = 0xFF0B6E4F.toInt(),\n            onPrimary = Color.WHITE,\n            primaryContainer = 0xFFE3F4EC.toInt(),\n            highlightText = 0xFF064A35.toInt(),\n        ),\n    ),\n)"
+                    },
+                    {
+                        "label": "Material 3 theme",
+                        "code": "// In your Compose UI. Works with dynamic (wallpaper) color too.\nval colorScheme = MaterialTheme.colorScheme\nButton(onClick = {\n    AlmatarAppInitializer.setColors(AlmatarColors.from(colorScheme))\n    AlmatarAppInitializer.launchHotels(/* ... */)\n}) {\n    Text(\"Book a hotel\")\n}"
+                    }
+                ],
+                "points": [
+                    "Each SDK screen reads the colors when it opens. Call `setColors` again when your theme changes, for example for dark mode. `setColors(null)` goes back to Almatar's colors.",
+                    "Covers Compose screens, colors set in code, and colors in XML layouts and styles, including state selectors in `res/color`.",
+                    "Icons and shapes drawn from XML drawables keep Almatar's colors for now.",
+                    "Overriding `almatar_*` colors in your own `colors.xml` still works. Where both apply, colors passed in code win."
+                ]
+            },
+            {
+                "id": "logo",
+                "title": "Logo",
+                "since": "Next release",
+                "summary": "Set `logoRes` to a drawable from your app, PNG or vector, to show your logo where the SDK shows Almatar's.",
+                "codes": [
+                    {
+                        "label": "Kotlin",
+                        "code": "almatarUiConfig = AlmatarUiConfig(\n    logoRes = R.drawable.my_logo,\n)"
+                    }
+                ],
+                "points": [
+                    "Shown in the gift box on the payment screen (40dp) and in the header of the corporate registration screen.",
+                    "Use an image that still reads at small sizes. A square mark works best."
+                ]
+            },
+            {
+                "id": "chrome",
+                "title": "Background, bars and back button",
+                "summary": "Match the screen background, status bar, toolbar and back button to your app.",
+                "fields": [
+                    {
+                        "name": "backgroundConfig",
+                        "desc": "Screen background: `AlmatarBackgroundConfig.ColorResource(R.color.x)` or `DrawableResource(R.drawable.x)`."
+                    },
+                    {
+                        "name": "statusBarConfig",
+                        "desc": "Status bar color, `AlmatarColorConfig.Resource(R.color.x)` or `Transparent`, and `lightIcons`."
+                    },
+                    {
+                        "name": "toolbarConfig",
+                        "desc": "Toolbar color, as an `AlmatarColorConfig`."
+                    },
+                    {
+                        "name": "backButtonRes",
+                        "desc": "Drawable for the toolbar's back button."
+                    }
+                ],
+                "codes": [
+                    {
+                        "label": "Kotlin",
+                        "code": "almatarUiConfig = AlmatarUiConfig(\n    backgroundConfig = AlmatarBackgroundConfig.DrawableResource(R.drawable.app_background),\n    statusBarConfig = AlmatarStatusBarConfig(colorConfig = AlmatarColorConfig.Transparent),\n    toolbarConfig = AlmatarToolbarConfig(configColor = AlmatarColorConfig.Transparent),\n    backButtonRes = R.drawable.ic_back,\n)"
+                    }
+                ]
+            }
+        ]
+    },
     "versions": [
         {
             "version": "1.0.0-alpha01",

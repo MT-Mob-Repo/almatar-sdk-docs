@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Almatar SDK integration requirements and public API by version and flow (B2C, B2B, B2B with SSO), for Google Play (GMS) and Huawei (HMS) devices — Gradle, AGP, Kotlin, KSP, compileSdk, minSdk, JDK and functions." />
-    <title>Almatar SDK Requirements</title>
+    <meta name="description" content="Almatar SDK docs: setup, initialization, payment, UI customization and public API by version and flow (B2C, B2B, B2B with SSO), for Google Play (GMS) and Huawei (HMS) devices." />
+    <title>Almatar SDK Docs</title>
     <style>
         :root {
             --bg: #f5f5f7;
@@ -51,11 +51,89 @@
             color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.5;
-            padding: 24px 16px 64px;
         }
-        .wrap { max-width: 760px; margin: 0 auto; }
+        a { color: var(--accent); }
+
+        /* Layout: sidebar + page */
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 264px;
+            flex: none;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 24px 16px;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+        }
+        .brand { font-size: 17px; font-weight: 700; margin: 0 8px 18px; letter-spacing: -0.01em; }
+        .side-version { margin: 0 8px 20px; }
+        .side-version label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+        .side-version select { width: 100%; min-width: 0; }
+        .side-version .meta { display: block; margin: 6px 0 0; }
+        .nav a {
+            display: block;
+            padding: 8px 12px;
+            border-radius: 10px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .nav a:hover { background: var(--code-bg); }
+        .nav a.active { background: var(--accent-soft); color: var(--accent); }
+        .subnav { margin: 2px 0 8px; }
+        .subnav a { font-size: 13.5px; font-weight: 400; color: var(--muted); padding: 5px 12px 5px 26px; }
+        .subnav a:hover { color: var(--text); }
+        main { flex: 1; min-width: 0; padding: 32px 24px 64px; }
+        .content { max-width: 760px; margin: 0 auto; }
+        .topbar { display: none; }
+        .menu-btn {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        @media (max-width: 899px) {
+            .layout { display: block; }
+            .topbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                height: 60px;
+                padding: 0 16px;
+                background: var(--card);
+                border-bottom: 1px solid var(--border);
+            }
+            .topbar .brand { margin: 0; }
+            .sidebar {
+                display: none;
+                position: fixed;
+                top: 60px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 9;
+                width: auto;
+                height: auto;
+                border-right: none;
+            }
+            .sidebar > .brand { display: none; }
+            body.nav-open .sidebar { display: block; }
+            body.nav-open { overflow: hidden; }
+            main { padding: 20px 16px 64px; }
+        }
         header { margin-bottom: 24px; }
-        h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+        h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
         .sub { color: var(--muted); font-size: 14px; }
         .card {
             background: var(--card);
@@ -64,6 +142,7 @@
             box-shadow: var(--shadow);
             padding: 20px;
             margin-bottom: 20px;
+            scroll-margin-top: 80px;
         }
         .picker { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .picker label { font-weight: 600; font-size: 14px; }
@@ -187,6 +266,7 @@
             background: var(--code-bg);
             padding: 1px 5px;
             border-radius: 5px;
+            overflow-wrap: anywhere; /* Long names would otherwise widen tables past a phone screen. */
         }
 
         /* API surface */
@@ -263,32 +343,52 @@
         .dialect:hover { color: var(--text); border-color: var(--accent); }
         .dialect.active { background: var(--accent); color: #fff; border-color: var(--accent); }
         @media (prefers-color-scheme: dark) { .dialect.active { color: #15121f; } }
+
+        /* Previous / next page */
+        .pager { display: flex; gap: 12px; margin: 8px 0 20px; }
+        .pager a {
+            flex: 1;
+            min-width: 0;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .pager a:hover { border-color: var(--accent); }
+        .pager a small { display: block; color: var(--muted); font-size: 12px; font-weight: 500; }
+        .pager a.next { text-align: right; margin-left: auto; }
+        .card h2 .tag { margin-left: 6px; vertical-align: middle; }
     </style>
 </head>
 <body>
-    <div class="wrap">
-        <header>
-            <h1>Almatar SDK — Integration Requirements</h1>
-            <div class="sub">Pick your SDK version and integration flow to see the exact build requirements and public API. Supports Google Play (GMS) and Huawei (HMS) devices.</div>
-        </header>
-
-        <div class="card">
-            <div class="picker">
+    <div class="topbar">
+        <div class="brand">Almatar SDK</div>
+        <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="sidebar">Menu</button>
+    </div>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">Almatar SDK</div>
+            <div class="side-version">
                 <label for="versionSelect">SDK version</label>
                 <select id="versionSelect" aria-label="SDK version"></select>
-                <span id="latestBadge" class="badge" hidden>Latest</span>
                 <span id="releaseMeta" class="meta"></span>
             </div>
-            <div class="tabs variant-tabs" id="variantTabs" role="tablist" hidden></div>
-            <p class="notes variant-desc" id="variantDesc"></p>
-        </div>
-
-        <div id="shared"></div>
-
-        <div class="tabs" id="flowTabs" role="tablist"></div>
-        <div id="flowpanel"></div>
-
-        <div class="foot" id="foot"></div>
+            <nav class="nav" id="nav" aria-label="Docs pages"></nav>
+        </aside>
+        <main>
+            <div class="content">
+                <header>
+                    <h1 id="pageTitle"></h1>
+                    <div class="sub" id="pageSub"></div>
+                </header>
+                <div id="page"></div>
+                <nav class="pager" id="pager" aria-label="Previous and next page"></nav>
+                <div class="foot" id="foot"></div>
+            </div>
+        </main>
     </div>
 
     <script>
@@ -643,27 +743,43 @@
             return `<div class="card"><h2>What's new in ${esc(entry.version)}</h2><ul class="changelog">${rows}</ul></div>`;
         }
 
-        function renderShared(data, entry, isLatest, variantId) {
-            document.getElementById("latestBadge").hidden = !isLatest;
-            document.getElementById("releaseMeta").textContent =
-                entry.releaseDate ? "Released " + entry.releaseDate : "";
-            // Versions without a "variants" block bundle the tracking tools in core.
-            const variant = entry.variants ? entry.variants[variantId] || {} : null;
+        // Gives a card an id and a sidebar title, so the page's sections can be linked.
+        function section(html, id, title) {
+            if (!html) return "";
+            return html.replace(`<div class="card`, `<div id="${id}" data-title="${esc(title)}" class="card`);
+        }
+
+        function tabsHtml(items, current, attr) {
+            return `<div class="tabs" role="tablist">` + items.map(it =>
+                `<button class="tab${it.id === current ? " active" : ""}" role="tab" data-${attr}="${it.id}">${esc(it.name)}</button>`
+            ).join("") + `</div>`;
+        }
+
+        function setupHtml(data, entry, variants, variantId) {
+            const hasVariants = !!(entry.variants && variants.length);
+            const variant = hasVariants ? entry.variants[variantId] || {} : null;
             let html = "";
-            if (!variant) {
-                html += `<div class="card"><h2>Tracking tools</h2><p class="notes">This version bundles the `
+            if (hasVariants) {
+                const vdef = variants.find(v => v.id === variantId);
+                html += tabsHtml(variants, variantId, "variant")
+                    + (vdef && vdef.desc ? `<p class="flowdesc">${esc(vdef.desc)}</p>` : "");
+            } else {
+                // Versions without a "variants" block bundle the tracking tools in core.
+                html += section(`<div class="card"><h2>Tracking tools</h2><p class="notes">This version bundles the `
                     + `tracking tools (UXCam, Insider, WebEngage, Adjust, Mixpanel, Firebase) inside `
-                    + `<code>core-gms</code> and <code>core-hms</code>. For a build without them, use the newest version.</p></div>`;
+                    + `<code>core-gms</code> and <code>core-hms</code>. For a build without them, use the newest version.</p></div>`,
+                    "tracking", "Tracking tools");
             }
-            html += settingsPluginCard(data, entry, variant && variant.settingsPluginId);
-            html += `<div class="card"><h2>Build requirements</h2>${requirementsTable(entry.requirements || {})}</div>`;
-            html += dependencyCard(data, entry, variant && variant.addons);
-            if (variant) html += variantCard(entry, variantId);
-            html += codeCard("Maven repository (dependencies)", repoSnippet(data));
+            html += section(settingsPluginCard(data, entry, variant && variant.settingsPluginId), "settings-plugin", "Settings plugin");
+            html += section(`<div class="card"><h2>Build requirements</h2>${requirementsTable(entry.requirements || {})}</div>`,
+                "requirements", "Build requirements");
+            html += section(dependencyCard(data, entry, variant && variant.addons), "dependency", "Add the dependency");
+            if (variant) html += section(variantCard(entry, variantId), "included", "What's included");
+            html += section(codeCard("Maven repository (dependencies)", repoSnippet(data)), "repository", "Maven repository");
             if (entry.notes && entry.notes.trim()) {
-                html += `<div class="card"><h2>Notes</h2><div class="notes">${esc(entry.notes)}</div></div>`;
+                html += section(`<div class="card"><h2>Notes</h2><div class="notes">${esc(entry.notes)}</div></div>`, "notes", "Notes");
             }
-            document.getElementById("shared").innerHTML = html;
+            return html;
         }
 
         // Escapes s, then turns `x` into <code>x</code>.
@@ -707,14 +823,45 @@
                 + `<div class="dialects">${btns}</div>${blocks}</div>`;
         }
 
-        function renderFlow(data, entry, flow) {
-            let html = "";
-            if (flow.desc) html += `<p class="flowdesc">${esc(flow.desc)}</p>`;
-            if (flow.init) html += codeCard("Initialize (" + flow.name + ")", flow.init);
-            html += paymentCard(data, flow.id);
-            html += changelogCard(entry, flow.id);
-            html += apiSurfaceCard(data.versions, entry, flow.id);
-            document.getElementById("flowpanel").innerHTML = html;
+        function initHtml(flow) {
+            let html = flow.desc ? `<p class="flowdesc">${esc(flow.desc)}</p>` : "";
+            if (flow.init) html += section(codeCard("Initialize (" + flow.name + ")", flow.init), "init", "Initialize");
+            html += `<p class="notes">To match the SDK screens to your app (colors, logo, bars), see `
+                + `<a href="#/customize">Customize the UI</a>.</p>`;
+            return html;
+        }
+
+        function apiHtml(data, entry, flow) {
+            return section(changelogCard(entry, flow.id), "whats-new", "What's new")
+                + section(apiSurfaceCard(data.versions, entry, flow.id), "api", "Public API");
+        }
+
+        // "Customize the UI" page: one card per sections[] entry of the "customization" block.
+        function customizeHtml(data) {
+            const c = data.customization;
+            if (!c) return `<p class="empty">Nothing documented yet.</p>`;
+            let html = c.intro ? `<p class="flowdesc">${rich(c.intro)}</p>` : "";
+            (c.sections || []).forEach(s => {
+                const since = s.since ? `<span class="tag tag-new">${esc(s.since)}</span>` : "";
+                let body = s.summary ? `<p class="notes">${rich(s.summary)}</p>` : "";
+                if (s.fields && s.fields.length) {
+                    body += `<table>` + s.fields.map(f => `<tr><td class="perm state">${esc(f.name)}</td>`
+                        + `<td class="purpose">${rich(f.desc)}</td></tr>`).join("") + `</table><div style="height:14px"></div>`;
+                }
+                const codes = s.codes || [];
+                if (codes.length === 1) body += codeBlock(codes[0].code);
+                if (codes.length > 1) {
+                    body += `<div class="dialects">` + codes.map((x, i) =>
+                        `<button class="dialect${i === 0 ? " active" : ""}" data-dialect="${s.id}-${i}">${esc(x.label)}</button>`).join("")
+                        + `</div>` + codes.map((x, i) =>
+                            `<div class="dialect-block" data-dialect="${s.id}-${i}"${i === 0 ? "" : " hidden"}>${codeBlock(x.code)}</div>`).join("");
+                }
+                if (s.points && s.points.length) {
+                    body += `<ul class="points">${s.points.map(x => `<li>${rich(x)}</li>`).join("")}</ul>`;
+                }
+                html += section(`<div class="card"><h2>${esc(s.title)}${since}</h2>${body}</div>`, s.id, s.title);
+            });
+            return html;
         }
 
         document.addEventListener("click", e => {
@@ -739,6 +886,20 @@
             }).catch(() => {});
         });
 
+        const PAGES = [
+            { id: "setup", title: "Setup", sub: "Build requirements, the settings plugin and the dependency for your SDK version." },
+            { id: "init", title: "Initialize", sub: "Initialize the SDK for your integration flow.", flows: true },
+            { id: "payment", title: "Payment", sub: "Who takes the payment: Almatar, or your app.", flows: true },
+            { id: "customize", title: "Customize the UI", sub: "Match the SDK screens to your app: colors, logo, background and bars." },
+            { id: "api", title: "Public API", sub: "Every public function in the selected version, and what changed in it.", flows: true }
+        ];
+
+        // "#/customize/colors" -> { page: "customize", section: "colors" }
+        function parseRoute() {
+            const [page, sectionId] = location.hash.replace(/^#\/?/, "").split("/");
+            return { page: PAGES.some(p => p.id === page) ? page : PAGES[0].id, section: sectionId || null };
+        }
+
         async function init() {
             let data;
             try {
@@ -746,7 +907,7 @@
                 if (!res.ok) throw new Error("HTTP " + res.status);
                 data = await res.json();
             } catch (err) {
-                document.getElementById("shared").innerHTML =
+                document.getElementById("page").innerHTML =
                     `<div class="card"><p class="error">Couldn't load <code>sdk-versions.json</code>.</p>`
                     + `<p class="notes">Open this page over HTTP (GitHub Pages or a local server such as `
                     + `<code>python3 -m http.server</code>) rather than from the file system.</p></div>`;
@@ -756,80 +917,109 @@
             const versions = (data.versions || []).slice().sort(cmpRelease);
             const variants = data.variants || [];
             const flows = (data.flows && data.flows.length) ? data.flows : DEFAULT_FLOWS;
-            const sel = document.getElementById("versionSelect");
             if (!versions.length) {
-                document.getElementById("shared").innerHTML =
+                document.getElementById("page").innerHTML =
                     `<div class="card"><p class="notes">No versions published yet.</p></div>`;
                 return;
             }
+
+            const state = {
+                version: versions[0].version,
+                variant: variants.length ? variants[0].id : null,
+                flow: flows[0].id
+            };
+            let renderedPage = null;
+
+            const sel = document.getElementById("versionSelect");
             versions.forEach((v, i) => {
                 const opt = document.createElement("option");
                 opt.value = v.version;
                 opt.textContent = v.version + (i === 0 ? "  (latest)" : "");
                 sel.appendChild(opt);
             });
-
-            let currentVersion = versions[0].version;
-            let currentFlow = flows[0].id;
-            let currentVariant = variants.length ? variants[0].id : null;
-
-            // Build variant tabs (without / with tracking); shown only for versions that ship both.
-            const variantTabsEl = document.getElementById("variantTabs");
-            variants.forEach(v => {
-                const b = document.createElement("button");
-                b.className = "tab" + (v.id === currentVariant ? " active" : "");
-                b.textContent = v.name;
-                b.setAttribute("role", "tab");
-                b.dataset.variant = v.id;
-                b.addEventListener("click", () => {
-                    currentVariant = v.id;
-                    [...variantTabsEl.children].forEach(c => c.classList.toggle("active", c.dataset.variant === v.id));
-                    drawShared();
-                });
-                variantTabsEl.appendChild(b);
-            });
-
-            // Build flow tabs.
-            const tabsEl = document.getElementById("flowTabs");
-            flows.forEach(f => {
-                const b = document.createElement("button");
-                b.className = "tab" + (f.id === currentFlow ? " active" : "");
-                b.textContent = f.name;
-                b.setAttribute("role", "tab");
-                b.dataset.flow = f.id;
-                b.addEventListener("click", () => {
-                    currentFlow = f.id;
-                    [...tabsEl.children].forEach(c => c.classList.toggle("active", c.dataset.flow === f.id));
-                    drawFlow();
-                });
-                tabsEl.appendChild(b);
-            });
+            sel.value = state.version;
+            sel.addEventListener("change", () => { state.version = sel.value; render(); });
 
             function entryFor(version) {
                 return versions.find(v => v.version === version) || versions[0];
             }
-            function drawShared() {
-                const entry = entryFor(currentVersion);
-                const hasVariants = !!(entry.variants && variants.length);
-                variantTabsEl.hidden = !hasVariants;
-                const vdef = variants.find(v => v.id === currentVariant);
-                document.getElementById("variantDesc").textContent = hasVariants && vdef ? vdef.desc || "" : "";
-                renderShared(data, entry, entry.version === versions[0].version, currentVariant);
-            }
-            function drawFlow() {
-                const entry = entryFor(currentVersion);
-                const flow = flows.find(f => f.id === currentFlow) || flows[0];
-                renderFlow(data, entry, flow);
+
+            // Sidebar: every page, with the current page's sections under it.
+            function drawNav(pageId) {
+                const sections = [...document.querySelectorAll("#page .card[id]")]
+                    .map(c => ({ id: c.id, title: c.dataset.title }));
+                document.getElementById("nav").innerHTML = PAGES.map(p => {
+                    const active = p.id === pageId;
+                    let html = `<a href="#/${p.id}"${active ? ` class="active" aria-current="page"` : ""}>${esc(p.title)}</a>`;
+                    if (active && sections.length > 1) {
+                        html += `<div class="subnav">` + sections.map(s =>
+                            `<a href="#/${p.id}/${s.id}">${esc(s.title)}</a>`).join("") + `</div>`;
+                    }
+                    return html;
+                }).join("");
             }
 
-            sel.addEventListener("change", () => {
-                currentVersion = sel.value;
-                drawShared();
-                drawFlow();
+            function drawPager(pageId) {
+                const i = PAGES.findIndex(p => p.id === pageId);
+                const prev = PAGES[i - 1], next = PAGES[i + 1];
+                document.getElementById("pager").innerHTML =
+                    (prev ? `<a href="#/${prev.id}"><small>Previous</small>${esc(prev.title)}</a>` : "")
+                    + (next ? `<a class="next" href="#/${next.id}"><small>Next</small>${esc(next.title)}</a>` : "");
+            }
+
+            function render() {
+                const { page: pageId } = parseRoute();
+                const page = PAGES.find(p => p.id === pageId);
+                const entry = entryFor(state.version);
+                const flow = flows.find(f => f.id === state.flow) || flows[0];
+                document.getElementById("releaseMeta").textContent =
+                    (entry.version === versions[0].version ? "Latest · " : "")
+                    + (entry.releaseDate ? "Released " + entry.releaseDate : "");
+                document.getElementById("pageTitle").textContent = page.title;
+                document.getElementById("pageSub").textContent = page.sub;
+                document.title = page.title + " · Almatar SDK Docs";
+
+                let html = page.flows ? tabsHtml(flows, flow.id, "flow") : "";
+                if (pageId === "setup") html += setupHtml(data, entry, variants, state.variant);
+                if (pageId === "init") html += initHtml(flow);
+                if (pageId === "payment") html += section(paymentCard(data, flow.id), "payment", "Payment");
+                if (pageId === "customize") html += customizeHtml(data);
+                if (pageId === "api") html += apiHtml(data, entry, flow);
+                document.getElementById("page").innerHTML = html;
+                renderedPage = pageId;
+                drawNav(pageId);
+                drawPager(pageId);
+            }
+
+            function go() {
+                const route = parseRoute();
+                if (route.page !== renderedPage) render();
+                setNavOpen(false);
+                const target = route.section && document.getElementById(route.section);
+                if (target) target.scrollIntoView();
+                else window.scrollTo(0, 0);
+            }
+
+            document.addEventListener("click", e => {
+                const t = e.target.closest("[data-flow], [data-variant]");
+                if (!t || !t.closest("#page")) return;
+                if (t.dataset.flow) state.flow = t.dataset.flow;
+                if (t.dataset.variant) state.variant = t.dataset.variant;
+                render();
             });
-            sel.value = currentVersion;
-            drawShared();
-            drawFlow();
+
+            const menuBtn = document.getElementById("menuBtn");
+            function setNavOpen(open) {
+                document.body.classList.toggle("nav-open", open);
+                menuBtn.setAttribute("aria-expanded", String(open));
+                menuBtn.textContent = open ? "Close" : "Menu";
+            }
+            menuBtn.addEventListener("click", () => setNavOpen(!document.body.classList.contains("nav-open")));
+            // A tap on a link to the section already shown changes no hash, so close the menu here too.
+            document.getElementById("nav").addEventListener("click", e => { if (e.target.closest("a")) setNavOpen(false); });
+
+            window.addEventListener("hashchange", go);
+            go();
 
             document.getElementById("foot").textContent =
                 data.artifact + " · " + versions.length + " version"

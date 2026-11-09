@@ -171,7 +171,9 @@
                 ],
                 "points": [
                     "Shown in the gift box on the payment screen (40dp) and in the header of the corporate registration screen.",
-                    "Use an image that still reads at small sizes. A square mark works best."
+                    "From the next release, also shown on the ticket in the flight booking success animation, fitted inside a square without stretching. Behind a white or very light logo the ticket turns dark: your `AlmatarColors.primary` when it is dark enough, otherwise dark grey.",
+                    "Use an image that still reads at small sizes. A square mark works best.",
+                    "For dark mode, put a light version of the logo with the same name in `res/drawable-night/`. Android picks it automatically when the SDK screens are dark, so nothing changes in `init`."
                 ]
             },
             {

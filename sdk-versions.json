@@ -177,7 +177,7 @@
             {
                 "id": "name",
                 "title": "Your name in SDK text",
-                "since": "Next release",
+                "since": "1.0.0-alpha04",
                 "summary": "Some SDK text names Almatar, such as \"Almatar Booking ID\" or \"rooms left on almatar.com\". Set `displayName` and the SDK shows your name there instead, in each language you run it in.",
                 "fields": [
                     {
@@ -233,6 +233,176 @@
         ]
     },
     "versions": [
+        {
+            "version": "1.0.0-alpha04",
+            "releaseDate": "2026-11-09",
+            "requirements": {
+                "gradle": "9.8.0",
+                "agp": "9.4.1",
+                "kotlin": "2.4.20",
+                "ksp": "2.3.12",
+                "compileSdk": 37,
+                "minSdk": 26,
+                "jdk": 17
+            },
+            "notes": "Adds displayName: your name, per language, instead of \"Almatar\" in SDK text such as booking ID labels. See Customize the UI. Pin this exact version: Gradle ranks 1.0.0-alpha04 below 1.0.5.",
+            "settingsPluginVersion": "3.0.0",
+            "variants": {
+                "clean": {
+                    "permissions": [
+                        {
+                            "name": "android.permission.INTERNET",
+                            "from": "Almatar SDK, payments"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_NETWORK_STATE",
+                            "from": "Almatar SDK, payments"
+                        },
+                        {
+                            "name": "android.permission.WAKE_LOCK",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_COARSE_LOCATION",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_FINE_LOCATION",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.POST_NOTIFICATIONS",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_WIFI_STATE",
+                            "from": "Almatar SDK, OPPWA payments SDK"
+                        },
+                        {
+                            "name": "android.permission.NFC",
+                            "from": "OPPWA payments SDK (card reading)"
+                        },
+                        {
+                            "name": "android.permission.USE_FINGERPRINT",
+                            "from": "OPPWA payments SDK"
+                        },
+                        {
+                            "name": "com.google.android.providers.gsf.permission.READ_GSERVICES",
+                            "from": "Fingerprint Pro, used by Checkout.com fraud checks"
+                        }
+                    ]
+                },
+                "tracking": {
+                    "settingsPluginId": "com.almatar.settings.tracking",
+                    "addons": [
+                        "com.almatar:analytics-tracking:1.0.7"
+                    ],
+                    "tools": [
+                        {
+                            "name": "UXCam",
+                            "version": "3.11.2",
+                            "purpose": "Session replay and heatmaps; passenger and payment fields are masked"
+                        },
+                        {
+                            "name": "Insider",
+                            "version": "17.3.2",
+                            "purpose": "Customer engagement and product events"
+                        },
+                        {
+                            "name": "WebEngage",
+                            "version": "5.2.0",
+                            "purpose": "Customer engagement and journey events"
+                        },
+                        {
+                            "name": "Adjust",
+                            "version": "5.8.0",
+                            "purpose": "Install attribution and conversion events"
+                        },
+                        {
+                            "name": "Mixpanel",
+                            "version": "8.11.1",
+                            "purpose": "Product analytics and feature experiments"
+                        },
+                        {
+                            "name": "Firebase Analytics",
+                            "version": "24.0.0",
+                            "purpose": "App analytics events"
+                        },
+                        {
+                            "name": "Firebase Messaging",
+                            "version": "26.0.0",
+                            "purpose": "Push notifications for the engagement tools"
+                        }
+                    ],
+                    "extraPermissions": [
+                        {
+                            "name": "com.google.android.gms.permission.AD_ID",
+                            "from": "Adjust, Firebase Analytics"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_ADSERVICES_AD_ID",
+                            "from": "Firebase Analytics"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_ADSERVICES_ATTRIBUTION",
+                            "from": "Firebase Analytics"
+                        },
+                        {
+                            "name": "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE",
+                            "from": "Firebase Analytics (install referrer)"
+                        },
+                        {
+                            "name": "android.permission.RECEIVE_BOOT_COMPLETED",
+                            "from": "WorkManager (via the tracking tools)"
+                        },
+                        {
+                            "name": "android.permission.FOREGROUND_SERVICE",
+                            "from": "WorkManager (via the tracking tools)"
+                        },
+                        {
+                            "name": "com.google.android.c2dm.permission.RECEIVE",
+                            "from": "Firebase Messaging"
+                        },
+                        {
+                            "name": "android.permission.BLUETOOTH",
+                            "from": "Mixpanel"
+                        },
+                        {
+                            "name": "android.permission.BROADCAST_CLOSE_SYSTEM_DIALOGS",
+                            "from": "WebEngage"
+                        }
+                    ]
+                }
+            },
+            "api": {
+                "added": [
+                    {
+                        "name": "AlmatarUiConfig.displayName",
+                        "group": "UI customization",
+                        "flows": [
+                            "b2c",
+                            "b2b",
+                            "sso"
+                        ],
+                        "signature": "val displayName: AlmatarDisplayName? = null",
+                        "desc": "Your name, shown instead of \"Almatar\" in SDK text that names Almatar."
+                    },
+                    {
+                        "name": "AlmatarDisplayName",
+                        "group": "UI customization",
+                        "flows": [
+                            "b2c",
+                            "b2b",
+                            "sso"
+                        ],
+                        "signature": "data class AlmatarDisplayName(\n    val default: String,\n    val byLanguage: Map<String, String> = emptyMap(),\n)",
+                        "desc": "byLanguage maps a language code (\"ar\", \"fr\", ...) to your name in that language; default covers any other language. The SDK screen's language picks the entry."
+                    }
+                ],
+                "changed": [],
+                "removed": []
+            }
+        },
         {
             "version": "1.0.0-alpha03",
             "releaseDate": "2026-11-08",

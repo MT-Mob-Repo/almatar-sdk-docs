@@ -175,6 +175,33 @@
                 ]
             },
             {
+                "id": "name",
+                "title": "Your name in SDK text",
+                "since": "Next release",
+                "summary": "Some SDK text names Almatar, such as \"Almatar Booking ID\" or \"rooms left on almatar.com\". Set `displayName` and the SDK shows your name there instead, in each language you run it in.",
+                "fields": [
+                    {
+                        "name": "default",
+                        "desc": "Your name for any language not in `byLanguage`."
+                    },
+                    {
+                        "name": "byLanguage",
+                        "desc": "A language code (`\"ar\"`, `\"fr\"`, ...) to your name in that language. The SDK screen's language picks the entry."
+                    }
+                ],
+                "codes": [
+                    {
+                        "label": "Kotlin",
+                        "code": "almatarUiConfig = AlmatarUiConfig(\n    displayName = AlmatarDisplayName(\n        default = \"Health Holding\",\n        byLanguage = mapOf(\n            \"ar\" to \"هيلث هولدنج\",\n            \"fr\" to \"Health Holding\",\n        ),\n    ),\n)"
+                    }
+                ],
+                "points": [
+                    "Only text where Almatar is the brand changes. In Arabic, المطار also means \"airport\", so airport text stays as it is.",
+                    "Running the SDK in a language other than English or Arabic (`LOCALE.OTHER`)? The SDK text falls back to English unless your app overrides the `almatar_*` strings for that language. Your name comes from `byLanguage` either way.",
+                    "This is not the `brandName` you pass to `init`: that one identifies your account to Almatar and is never shown."
+                ]
+            },
+            {
                 "id": "chrome",
                 "title": "Background, bars and back button",
                 "summary": "Match the screen background, status bar, toolbar and back button to your app.",

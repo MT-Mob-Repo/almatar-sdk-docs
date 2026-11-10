@@ -234,6 +234,33 @@
             }
         ]
     },
+    "debugging": {
+        "intro": "Tools for checking the SDK while you integrate it. Use them in debug builds only.",
+        "sections": [
+            {
+                "id": "chucker",
+                "title": "See network calls with Chucker",
+                "summary": "The SDK records its network calls with Chucker when you initialize it with `almatarEnvironment = AlmatarEnvironment.Development`. The published SDK ships Chucker's no-op library, which records nothing, so swap in the real library for your debug builds. Release builds keep the no-op one.",
+                "codes": [
+                    {
+                        "label": "Kotlin DSL",
+                        "code": "// app/build.gradle.kts\n// The SDK ships Chucker's no-op library. Debug builds use the real one instead.\nconfigurations.configureEach {\n    if (name.contains(\"debug\", ignoreCase = true)) {\n        resolutionStrategy.dependencySubstitution {\n            substitute(module(\"com.github.chuckerteam.chucker:library-no-op\"))\n                .using(module(\"com.github.chuckerteam.chucker:library:4.3.1\"))\n        }\n    }\n}"
+                    },
+                    {
+                        "label": "Groovy",
+                        "code": "// app/build.gradle\n// The SDK ships Chucker's no-op library. Debug builds use the real one instead.\nconfigurations.configureEach {\n    if (name.toLowerCase().contains(\"debug\")) {\n        resolutionStrategy.dependencySubstitution {\n            substitute(module(\"com.github.chuckerteam.chucker:library-no-op\"))\n                .using(module(\"com.github.chuckerteam.chucker:library:4.3.1\"))\n        }\n    }\n}"
+                    }
+                ],
+                "points": [
+                    "Run a debug build and open an SDK screen. A \"Recording HTTP activity\" notification appears: tap it to see each request and response. On Android 13 and later, allow notifications for your app first.",
+                    "Nothing shows with `AlmatarEnvironment.Production`, even in a debug build.",
+                    "Keep Chucker's version the same as the SDK's, 4.3.1. If your app already adds Chucker, this swap also avoids duplicate class errors between the real and no-op libraries.",
+                    "The check matches every configuration whose name contains `debug`, including flavored ones such as `gmsDebugRuntimeClasspath`.",
+                    "Never ship Chucker in a release build: it stores requests and responses on the device, including tokens and personal data."
+                ]
+            }
+        ]
+    },
     "versions": [
         {
             "version": "1.0.0-alpha05",

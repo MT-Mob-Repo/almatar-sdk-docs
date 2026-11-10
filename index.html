@@ -836,9 +836,8 @@
                 + section(apiSurfaceCard(data.versions, entry, flow.id), "api", "Public API");
         }
 
-        // "Customize the UI" page: one card per sections[] entry of the "customization" block.
-        function customizeHtml(data) {
-            const c = data.customization;
+        // A page made of one card per sections[] entry of a block such as "customization" or "debugging".
+        function sectionsHtml(c) {
             if (!c) return `<p class="empty">Nothing documented yet.</p>`;
             let html = c.intro ? `<p class="flowdesc">${rich(c.intro)}</p>` : "";
             (c.sections || []).forEach(s => {
@@ -891,6 +890,7 @@
             { id: "init", title: "Initialize", sub: "Initialize the SDK for your integration flow.", flows: true },
             { id: "payment", title: "Payment", sub: "Who takes the payment: Almatar, or your app.", flows: true },
             { id: "customize", title: "Customize the UI", sub: "Match the SDK screens to your app: colors, logo, background and bars." },
+            { id: "debug", title: "Debugging", sub: "See what the SDK does while you integrate it." },
             { id: "api", title: "Public API", sub: "Every public function in the selected version, and what changed in it.", flows: true }
         ];
 
@@ -983,7 +983,8 @@
                 if (pageId === "setup") html += setupHtml(data, entry, variants, state.variant);
                 if (pageId === "init") html += initHtml(flow);
                 if (pageId === "payment") html += section(paymentCard(data, flow.id), "payment", "Payment");
-                if (pageId === "customize") html += customizeHtml(data);
+                if (pageId === "customize") html += sectionsHtml(data.customization);
+                if (pageId === "debug") html += sectionsHtml(data.debugging);
                 if (pageId === "api") html += apiHtml(data, entry, flow);
                 document.getElementById("page").innerHTML = html;
                 renderedPage = pageId;

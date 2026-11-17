@@ -888,6 +888,7 @@
 
         const PAGES = [
             { id: "setup", title: "Setup", sub: "Build requirements, the settings plugin and the dependency for your SDK version." },
+            { id: "migrate", title: "Migrate from general-sdk", sub: "Move an app from com.almatar.android:general-sdk to core, step by step." },
             { id: "init", title: "Initialize", sub: "Initialize the SDK for your integration flow.", flows: true },
             { id: "features", title: "Features", sub: "Every flow you can open, grouped by what you want to do, with examples." },
             { id: "payment", title: "Payment", sub: "Who takes the payment: Almatar, or your app.", flows: true },
@@ -986,6 +987,7 @@
                 if (pageId === "init") html += initHtml(flow);
                 if (pageId === "payment") html += section(paymentCard(data, flow.id), "payment", "Payment");
                 if (pageId === "features") html += sectionsHtml(data.features);
+                if (pageId === "migrate") html += sectionsHtml(data.migration);
                 if (pageId === "customize") html += sectionsHtml(data.customization);
                 if (pageId === "debug") html += sectionsHtml(data.debugging);
                 if (pageId === "api") html += apiHtml(data, entry, flow);

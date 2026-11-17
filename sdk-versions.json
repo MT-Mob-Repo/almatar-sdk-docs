@@ -39,13 +39,13 @@
         {
             "id": "b2c",
             "name": "B2C",
-            "desc": "Consumer integration. Initialize with enableB2bSDK = false and launch any of the hotel / flight / bookings flows directly.",
-            "init": "AlmatarAppInitializer.init(\n    application = this,\n    baseUrl = \"<your base url>\",\n    almatarEnvironment = AlmatarEnvironment.Production,\n    supportNumber = \"<support number>\",\n    almatarUiConfig = AlmatarUiConfig(),\n    enableB2bSDK = false,\n)"
+            "desc": "Consumer integration. Initialize with enableB2bSDK = false and launch any of the hotel / flight / bookings flows directly. brandName is required for any partner without a website.",
+            "init": "AlmatarAppInitializer.init(\n    application = this,\n    baseUrl = \"<your base url>\",\n    almatarEnvironment = AlmatarEnvironment.Production,\n    supportNumber = \"<support number>\",\n    almatarUiConfig = AlmatarUiConfig(),\n    enableB2bSDK = false,\n    // Required for any partner without a website\n    brandName = \"<your brand>\",\n)"
         },
         {
             "id": "b2b",
             "name": "B2B",
-            "desc": "Corporate (e.g. Aamal) integration. Initialize with enableB2bSDK = true and a brandName. Same launch flows as B2C, with the corporate section enabled on payment.",
+            "desc": "Corporate (e.g. Aamal) integration. Initialize with enableB2bSDK = true and a brandName (required for any partner without a website). Same launch flows as B2C, with the corporate section enabled on payment.",
             "init": "AlmatarAppInitializer.init(\n    application = this,\n    baseUrl = \"<your base url>\",\n    almatarEnvironment = AlmatarEnvironment.Production,\n    supportNumber = \"<support number>\",\n    almatarUiConfig = AlmatarUiConfig(),\n    enableB2bSDK = true,\n    brandName = \"<your brand>\",\n)"
         },
         {
@@ -519,6 +519,156 @@
                         "label": "Search region",
                         "code": "AlmatarAppInitializer.setupGlobalConfig(supportedCountry = SupportedCountry.KSA)"
                     }
+                ]
+            }
+        ]
+    },
+    "migration": {
+        "intro": "Moving from `com.almatar.android:general-sdk` (7.3.x) to `com.almatar:core-gms` / `core-hms`. The SDK's packages and launch functions are the same, so most apps only change their Gradle files and the `init` call. Follow the steps in order; each shows your code before and after.",
+        "sections": [
+            {
+                "id": "what-changes",
+                "title": "What changes",
+                "summary": "Everything you need to touch. Anything not listed works as before: `AlmatarAppInitializer.launch*`, the pre-fill and cache functions, `com.almatar.model.sdk.*`, `AlmatarUiConfig`, and Hilt (your `Application` still needs `@HiltAndroidApp`).",
+                "fields": [
+                    {
+                        "name": "Artifact",
+                        "desc": "`com.almatar.android:general-sdk` becomes `com.almatar:core-gms` (Google Play) or `com.almatar:core-hms` (Huawei)."
+                    },
+                    {
+                        "name": "Repositories",
+                        "desc": "The vendor repositories you added by hand are replaced by the `com.almatar.settings` Gradle plugin."
+                    },
+                    {
+                        "name": "Tracking tools",
+                        "desc": "general-sdk always bundled UXCam, Insider, WebEngage, Adjust, Mixpanel and Firebase. Core has none; add `com.almatar:analytics-tracking` only if you want them."
+                    },
+                    {
+                        "name": "init",
+                        "desc": "`enableB2B` is renamed `enableB2bSDK`, and `supportNumber` is a new required parameter."
+                    },
+                    {
+                        "name": "Resources",
+                        "desc": "The SDK's `R` class moves from `com.almatar.R` to `com.almatar.core.R`. Resource names don't change."
+                    },
+                    {
+                        "name": "Build tools",
+                        "desc": "Core needs newer Gradle, AGP, Kotlin and compileSdk. See Setup for the exact versions."
+                    },
+                    {
+                        "name": "Removed",
+                        "desc": "`PaymentFeatureConfig.sdkShowCorporateSection`: B2B mode shows the corporate section on its own."
+                    }
+                ]
+            },
+            {
+                "id": "step-build",
+                "title": "1. Update your build tools",
+                "summary": "Core is built with newer tools than general-sdk 7.3.70, so your app needs at least these versions.",
+                "fields": [
+                    {
+                        "name": "Gradle",
+                        "desc": "9.2.1 → 9.8.0"
+                    },
+                    {
+                        "name": "Android Gradle Plugin",
+                        "desc": "9.0.0 → 9.4.1"
+                    },
+                    {
+                        "name": "Kotlin",
+                        "desc": "2.2.20 → 2.4.20 (KSP 2.3.4 → 2.3.12)"
+                    },
+                    {
+                        "name": "compileSdk",
+                        "desc": "36 → 37 (minSdk stays 26, JDK stays 17)"
+                    }
+                ],
+                "points": [
+                    "The Setup page always lists the requirements of the version you pick in the sidebar."
+                ]
+            },
+            {
+                "id": "step-settings",
+                "title": "2. Replace the repositories with the settings plugin",
+                "summary": "Apply `com.almatar.settings` in `settings.gradle.kts` and remove the vendor repositories you added for general-sdk.",
+                "codes": [
+                    {
+                        "label": "Before (general-sdk)",
+                        "code": "// settings.gradle.kts (general-sdk)\ndependencyResolutionManagement {\n    repositories {\n        google()\n        mavenCentral()\n        maven { url = uri(\"https://jitpack.io\") }\n        maven { url = uri(\"https://mobilesdk.useinsider.com/android\") }\n        maven { url = uri(\"https://sdk.uxcam.com/android/\") }\n        maven { url = uri(\"https://maven.fpregistry.io/releases\") }\n        maven { url = uri(\"https://gitlab.com/api/v4/projects/50255203/packages/maven\") }\n        maven {\n            url = uri(\"https://maven.pkg.github.com/MT-Mob-Repo/Almatar_General_SDK\")\n            credentials { /* gpr.user / gpr.key */ }\n        }\n    }\n}"
+                    },
+                    {
+                        "label": "After (core)",
+                        "code": "// settings.gradle.kts (core)\npluginManagement {\n    repositories {\n        gradlePluginPortal()\n        google()\n        mavenCentral()\n        maven {\n            url = uri(\"https://maven.pkg.github.com/MT-Mob-Repo/Almatar_General_SDK\")\n            credentials {\n                username = providers.gradleProperty(\"gpr.user\").get()\n                password = providers.gradleProperty(\"gpr.key\").get()\n            }\n        }\n    }\n}\n\nplugins {\n    // Adds the repositories the SDK needs (JitPack, payments, AI).\n    // With the tracking add-on, use id(\"com.almatar.settings.tracking\") instead.\n    id(\"com.almatar.settings\") version \"3.0.0\"\n}\n\ndependencyResolutionManagement {\n    repositories {\n        google()\n        mavenCentral()\n        maven {\n            url = uri(\"https://maven.pkg.github.com/MT-Mob-Repo/Almatar_General_SDK\")\n            credentials {\n                username = providers.gradleProperty(\"gpr.user\").get()\n                password = providers.gradleProperty(\"gpr.key\").get()\n            }\n        }\n        // Remove the Insider, UXCam, fpregistry, GitLab and JitPack repositories you added for\n        // general-sdk: the settings plugin adds the ones that are still needed.\n    }\n}"
+                    }
+                ],
+                "points": [
+                    "Using Groovy (`settings.gradle`)? The Setup page has the same block for Groovy.",
+                    "Keep your `gpr.user` / `gpr.key` credentials: core is on the same GitHub Packages repository."
+                ]
+            },
+            {
+                "id": "step-dependency",
+                "title": "3. Change the dependency",
+                "summary": "Swap the general-sdk coordinate for core. Publishing to Huawei AppGallery too? Use a product flavor per store, as shown on Setup.",
+                "codes": [
+                    {
+                        "label": "Before (general-sdk)",
+                        "code": "// app/build.gradle.kts (general-sdk)\ndependencies {\n    implementation(\"com.almatar.android:general-sdk:7.3.70\")\n}"
+                    },
+                    {
+                        "label": "After (core)",
+                        "code": "// app/build.gradle.kts (core)\ndependencies {\n    // Google Play devices. For Huawei AppGallery use com.almatar:core-hms (see Setup).\n    implementation(\"com.almatar:core-gms:1.0.6-alpha01\")\n\n    // Optional: only if you want the tracking tools that general-sdk always bundled.\n    // implementation(\"com.almatar:analytics-tracking:1.0.8\")\n}"
+                    }
+                ],
+                "points": [
+                    "Never put `core-gms` and `core-hms` in the same build variant: they contain the same classes.",
+                    "Use an exact version, not a range or `latest`: older 1.0.x builds still bundle the tracking tools."
+                ]
+            },
+            {
+                "id": "step-init",
+                "title": "4. Update init",
+                "summary": "Rename `enableB2B` to `enableB2bSDK` and pass your `supportNumber`. Everything else in the call is unchanged.",
+                "codes": [
+                    {
+                        "label": "Before (general-sdk)",
+                        "code": "// general-sdk\nAlmatarAppInitializer.init(\n    application = this,\n    baseUrl = \"<your base url>\",\n    almatarEnvironment = AlmatarEnvironment.Production,\n    almatarUiConfig = AlmatarUiConfig(),\n    enableB2B = false,     // true for the B2B flow\n    // Required for any partner without a website\n    brandName = \"<your brand>\",\n)"
+                    },
+                    {
+                        "label": "After (core)",
+                        "code": "// core\nAlmatarAppInitializer.init(\n    application = this,\n    baseUrl = \"<your base url>\",\n    almatarEnvironment = AlmatarEnvironment.Production,\n    supportNumber = \"<support number>\", // new, required\n    almatarUiConfig = AlmatarUiConfig(),\n    enableB2bSDK = false,  // true for the B2B flow\n    // Required for any partner without a website\n    brandName = \"<your brand>\",\n)"
+                    }
+                ],
+                "points": [
+                    "`enableSDK` is new and defaults to `true`; leave it out.",
+                    "Set `enableB2bSDK = true` only for the B2B flow (corporate partners, including B2B with SSO). B2C apps keep it `false`, the default.",
+                    "`brandName` is required for any partner without a website, in B2C and B2B. Partners with a website can leave it out."
+                ]
+            },
+            {
+                "id": "step-code",
+                "title": "5. Fix code that referenced the SDK",
+                "summary": "Most apps compile without changes after step 4. Check for these:",
+                "codes": [
+                    {
+                        "label": "Resources",
+                        "code": "// Before\nimport com.almatar.R\nAlmatarColorConfig.Resource(R.color.almatar_mainBackground)\n\n// After\nimport com.almatar.core.R as AlmatarR\nAlmatarColorConfig.Resource(AlmatarR.color.almatar_mainBackground)"
+                    }
+                ],
+                "points": [
+                    "Overriding SDK resources in your own `res/` (same name, `almatar_` prefix) keeps working.",
+                    "Remove any use of `PaymentFeatureConfig.sdkShowCorporateSection`.",
+                    "If you relied on the tracking tools general-sdk bundled (events in your dashboards, push via the SDK), add `com.almatar:analytics-tracking` and apply `com.almatar.settings.tracking` instead of `com.almatar.settings`."
+                ]
+            },
+            {
+                "id": "step-check",
+                "title": "6. Check the migration",
+                "points": [
+                    "Run `./gradlew :app:dependencies` and confirm `com.almatar:core-gms` (or `core-hms`) is there and `com.almatar.android:general-sdk` is gone.",
+                    "Open each flow you use (hotels, flights, bookings) and complete a booking in your test environment.",
+                    "B2B: launch once with a valid and once with an invalid token, and check that `sdkLaunchCallback.onError` is called for the invalid one.",
+                    "New in core: brand colors, your display name and static packages. See Customize the UI and Features."
                 ]
             }
         ]
@@ -1903,7 +2053,7 @@
                             "sso"
                         ],
                         "signature": "fun init(\n    application: Application,\n    baseUrl: String,\n    almatarEnvironment: AlmatarEnvironment,\n    supportNumber: String,\n    almatarUiConfig: AlmatarUiConfig = AlmatarUiConfig(),\n    supportedCountry: SupportedCountry = SupportedCountry.ALL,\n    enableSDK: Boolean = true,\n    enableB2bSDK: Boolean = false,\n    brandName: String? = null,\n)",
-                        "desc": "Bootstraps the SDK (API/console URLs, environment, support number, UI config). Set enableB2bSDK = true and a brandName for B2B / SSO."
+                        "desc": "Bootstraps the SDK (API/console URLs, environment, support number, UI config). Set enableB2bSDK = true for B2B / SSO. brandName is required for any partner without a website."
                     },
                     {
                         "name": "AlmatarAppInitializer.setupGlobalConfig",

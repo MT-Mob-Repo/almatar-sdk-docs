@@ -826,7 +826,8 @@
         function initHtml(flow) {
             let html = flow.desc ? `<p class="flowdesc">${esc(flow.desc)}</p>` : "";
             if (flow.init) html += section(codeCard("Initialize (" + flow.name + ")", flow.init), "init", "Initialize");
-            html += `<p class="notes">To match the SDK screens to your app (colors, logo, bars), see `
+            html += `<p class="notes">Next, open a flow: flights, hotels, static packages, bookings and more are on `
+                + `<a href="#/features">Features</a>. To match the SDK screens to your app (colors, logo, bars), see `
                 + `<a href="#/customize">Customize the UI</a>.</p>`;
             return html;
         }
@@ -888,6 +889,7 @@
         const PAGES = [
             { id: "setup", title: "Setup", sub: "Build requirements, the settings plugin and the dependency for your SDK version." },
             { id: "init", title: "Initialize", sub: "Initialize the SDK for your integration flow.", flows: true },
+            { id: "features", title: "Features", sub: "Every flow you can open, grouped by what you want to do, with examples." },
             { id: "payment", title: "Payment", sub: "Who takes the payment: Almatar, or your app.", flows: true },
             { id: "customize", title: "Customize the UI", sub: "Match the SDK screens to your app: colors, logo, background and bars." },
             { id: "debug", title: "Debugging", sub: "See what the SDK does while you integrate it." },
@@ -983,6 +985,7 @@
                 if (pageId === "setup") html += setupHtml(data, entry, variants, state.variant);
                 if (pageId === "init") html += initHtml(flow);
                 if (pageId === "payment") html += section(paymentCard(data, flow.id), "payment", "Payment");
+                if (pageId === "features") html += sectionsHtml(data.features);
                 if (pageId === "customize") html += sectionsHtml(data.customization);
                 if (pageId === "debug") html += sectionsHtml(data.debugging);
                 if (pageId === "api") html += apiHtml(data, entry, flow);

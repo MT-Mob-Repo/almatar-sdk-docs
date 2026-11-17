@@ -261,7 +261,447 @@
             }
         ]
     },
+    "features": {
+        "intro": "Every flow the SDK opens, grouped by what you want to do. Call `AlmatarAppInitializer.init` once first (see Initialize). Each `launch*` function opens SDK screens on top of yours; when the user is done, the SDK calls your `almatarFlowFinishedCallback`.",
+        "sections": [
+            {
+                "id": "overview",
+                "title": "Find the function you need",
+                "summary": "Pick what you want the user to do, then open its section from the sidebar.",
+                "fields": [
+                    {
+                        "name": "launchFlights",
+                        "desc": "Flights: open the flight search."
+                    },
+                    {
+                        "name": "launchFlightsSearchResults",
+                        "desc": "Flights: skip the search and open results for a trip you pass in."
+                    },
+                    {
+                        "name": "launchFlightConfirmation",
+                        "desc": "Flights: open the confirmation of an existing booking."
+                    },
+                    {
+                        "name": "launchHotels",
+                        "desc": "Hotels: open the hotel search."
+                    },
+                    {
+                        "name": "launchHotelsSearchResults",
+                        "desc": "Hotels: skip the search and open results for a stay you pass in."
+                    },
+                    {
+                        "name": "launchHotelConfirmation",
+                        "desc": "Hotels: open the confirmation of an existing booking."
+                    },
+                    {
+                        "name": "getStaticPackagesLandingPages",
+                        "desc": "Static packages: get the landing pages as data, with no UI."
+                    },
+                    {
+                        "name": "AlmatarStaticPackages",
+                        "desc": "Static packages: a composable that shows the package cards inside your screen."
+                    },
+                    {
+                        "name": "launchBookings",
+                        "desc": "My bookings: the user's trips, with add-ons after booking."
+                    },
+                    {
+                        "name": "preFillFlightPassengers",
+                        "desc": "Fill the flight passenger forms with your users' details."
+                    },
+                    {
+                        "name": "preFillHotelPassenger",
+                        "desc": "Fill the hotel guest form with your user's details."
+                    },
+                    {
+                        "name": "clearCachedFlightPassengers",
+                        "desc": "Remove the flight passengers saved by `preFillFlightPassengers`."
+                    },
+                    {
+                        "name": "clearCachedHotelPassengers",
+                        "desc": "Remove the hotel guest saved by `preFillHotelPassenger`."
+                    },
+                    {
+                        "name": "setupGlobalConfig",
+                        "desc": "Limit hotel and airport search to Saudi Arabia, or allow all countries."
+                    }
+                ]
+            },
+            {
+                "id": "common",
+                "title": "Parameters every launch takes",
+                "summary": "All `launch*` functions share these parameters, so the sections below show only what is different.",
+                "fields": [
+                    {
+                        "name": "locale",
+                        "desc": "Language of the SDK screens: `LOCALE.ENGLISH` or `LOCALE.ARABIC`."
+                    },
+                    {
+                        "name": "almatarFlowFinishedCallback",
+                        "desc": "Called when the user leaves the SDK, for example \"Back to home\" on a confirmation. Show your own screen here."
+                    },
+                    {
+                        "name": "generateTokenImpl",
+                        "desc": "The SDK asks for your user's token. Call the callback with `(token, refreshToken, errorMessage)`. In B2B mode the token is checked before any screen opens."
+                    },
+                    {
+                        "name": "startPaymentFlowImpl",
+                        "desc": "`null`: Almatar takes the payment. Your function: your app takes it. See the Payment page."
+                    },
+                    {
+                        "name": "isHajj",
+                        "desc": "Optional, default `false`. Set `true` when the booking is for Hajj."
+                    },
+                    {
+                        "name": "baseUrl",
+                        "desc": "Optional. Overrides the base URL from `init` for this flow."
+                    },
+                    {
+                        "name": "sdkLaunchCallback",
+                        "desc": "Optional. `onError(error)` is called when the launch fails (for example an invalid B2B token). No screen opens."
+                    }
+                ],
+                "codes": [
+                    {
+                        "label": "Shared setup",
+                        "code": "// Shared by the examples below\nval locale = LOCALE.ENGLISH                       // or LOCALE.ARABIC\nfun onFlowFinished() { /* the user left the SDK: show your screen */ }\nfun generateToken(callback: GenerateTokenCallback) {\n    callback(userToken, refreshToken, null)       // or (null, null, \"why it failed\")\n}"
+                    }
+                ]
+            },
+            {
+                "id": "flights",
+                "title": "Flights",
+                "summary": "Open the flight search, jump straight to results for a trip you already know, or show the confirmation of a booking.",
+                "codes": [
+                    {
+                        "label": "Search",
+                        "code": "AlmatarAppInitializer.launchFlights(\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n    startPaymentFlowImpl = null,          // Almatar takes the payment\n)"
+                    },
+                    {
+                        "label": "Search results",
+                        "code": "// imports: com.almatar.model.sdk.*, com.almatar.model.flight.TripType,\n//          com.almatar.search.passenger.CabinClass, java.time.LocalDate\nval riyadh = FlightLocationData(\n    id = \"RUH\", name = \"King Khalid International Airport\", cityName = \"Riyadh\",\n    cityCode = \"RUH\", countryName = \"Saudi Arabia\", countryCode = \"SA\", type = \"airport\",\n)\nval jeddah = FlightLocationData(\n    id = \"JED\", name = \"King Abdulaziz International Airport\", cityName = \"Jeddah\",\n    cityCode = \"JED\", countryName = \"Saudi Arabia\", countryCode = \"SA\", type = \"airport\",\n)\nAlmatarAppInitializer.launchFlightsSearchResults(\n    flightSearchData = FlightSearchData(\n        tripType = TripType.ROUNDTRIP,    // ONEWAY, ROUNDTRIP or MULTICITY\n        cabinClass = CabinClass.ECONOMY,  // ECONOMY, PREMIUM_ECONOMY, BUSINESS or FIRST\n        adultCount = 1, childCount = 0, infantCount = 0,\n        legs = listOf(                    // one leg per flight\n            FlightSearchLeg(LocalDate.of(2027, 2, 1), riyadh, jeddah),\n            FlightSearchLeg(LocalDate.of(2027, 2, 10), jeddah, riyadh),\n        ),\n        editEnabled = false,              // false: the user can't change the search\n    ),\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n    startPaymentFlowImpl = null,\n)"
+                    },
+                    {
+                        "label": "Confirmation",
+                        "code": "AlmatarAppInitializer.launchFlightConfirmation(\n    bookingKey = \"Qk7RjeRRV9\",            // the booking's key\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n)"
+                    }
+                ],
+                "points": [
+                    "`editEnabled = false` locks the search and the pre-filled passenger details, so the user books exactly what you passed. The default is `false`.",
+                    "To fill the passenger forms too, call `preFillFlightPassengers` first and launch from its `onComplete` (see Pre-fill passengers).",
+                    "The confirmation takes no payment parameter: the booking is already paid."
+                ]
+            },
+            {
+                "id": "hotels",
+                "title": "Hotels",
+                "summary": "Open the hotel search, jump straight to results in Makkah or Madinah, or show the confirmation of a booking.",
+                "codes": [
+                    {
+                        "label": "Search",
+                        "code": "AlmatarAppInitializer.launchHotels(\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n    startPaymentFlowImpl = null,\n)"
+                    },
+                    {
+                        "label": "Search results",
+                        "code": "// imports: com.almatar.model.sdk.*, java.time.LocalDate, java.time.ZoneOffset\nfun millis(date: LocalDate) = date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()\n\nAlmatarAppInitializer.launchHotelsSearchResults(\n    hotelData = HotelSearchData(\n        hotelsDestination = HotelsDestination.Makkah,   // Makkah or Madinah\n        rooms = listOf(\n            HotelSearchRooms(adultCount = 2, childrenBirthDates = listOf(LocalDate.of(2018, 5, 1))),\n        ),\n        checkInDate = millis(LocalDate.of(2027, 2, 1)),\n        checkOutDate = millis(LocalDate.of(2027, 2, 4)),\n        editEnabled = false,\n    ),\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n    startPaymentFlowImpl = null,\n)"
+                    },
+                    {
+                        "label": "Confirmation",
+                        "code": "AlmatarAppInitializer.launchHotelConfirmation(\n    publicKey = \"zMLN1JgEkp\",             // the booking's public key\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n)"
+                    }
+                ],
+                "points": [
+                    "One `HotelSearchRooms` per room. Children are given by birth date, so the SDK works out their ages.",
+                    "`checkInDate` and `checkOutDate` are epoch milliseconds.",
+                    "To fill the guest form, call `preFillHotelPassenger` first."
+                ]
+            },
+            {
+                "id": "static-packages",
+                "title": "Static packages",
+                "since": "1.0.6-alpha01",
+                "summary": "Show Almatar's static packages inside your own screen. Unlike the other flows, nothing opens until the user taps Book: you place the package cards where you want them. Booking opens the SDK's package details, payment and confirmation screens.",
+                "fields": [
+                    {
+                        "name": "getStaticPackagesLandingPages",
+                        "desc": "Data only: the landing pages (`id`, `title`, `description`, images). Use it for your own UI or to choose a page id."
+                    },
+                    {
+                        "name": "AlmatarStaticPackages",
+                        "desc": "Composable with the package cards of one landing page: `landingPageId`, or the first page when it is `null`."
+                    }
+                ],
+                "codes": [
+                    {
+                        "label": "Show the cards (Compose)",
+                        "code": "// Inside your Compose screen\nAlmatarStaticPackages(\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,   // \"Back to home\" on the confirmation\n    generateTokenImpl = ::generateToken,\n    startPaymentFlowImpl = null,\n    landingPageId = null,          // null: the first landing page\n    scrollable = false,            // false: fits inside your LazyColumn / scrolling screen\n    sdkLaunchCallback = object : SdkLaunchCallback {\n        override fun onError(error: Throwable) { /* B2B token rejected */ }\n    },\n)"
+                    },
+                    {
+                        "label": "Data only",
+                        "code": "AlmatarAppInitializer.getStaticPackagesLandingPages(\n    locale = locale,\n    generateTokenImpl = ::generateToken,\n    callback = object : StaticPackagesLandingPagesCallback {\n        override fun onSuccess(landingPages: List<LandingPage>) {\n            // e.g. let the user pick one, then show AlmatarStaticPackages(landingPageId = page.id)\n        }\n        override fun onError(error: Throwable) { }\n    },\n)"
+                    }
+                ],
+                "points": [
+                    "`scrollable = false` (the default) gives the cards their full height, so they can be one section of your scrolling screen. Use `true` when the cards fill a screen on their own.",
+                    "Changing `landingPageId` loads that page's packages.",
+                    "On the confirmation, \"Back to home\" closes the package screens and calls `almatarFlowFinishedCallback`; \"Go to My Trips\" opens the bookings screen.",
+                    "`getStaticPackagesLandingPages` delivers its result on the main thread. Calling it again before the result arrives cancels the earlier call.",
+                    "Using views, not Compose? Put `AlmatarStaticPackages` in a `ComposeView`."
+                ]
+            },
+            {
+                "id": "bookings",
+                "title": "My bookings",
+                "summary": "Open the user's trips. From there the user can see bookings and buy add-ons such as seats or baggage.",
+                "codes": [
+                    {
+                        "label": "My bookings",
+                        "code": "AlmatarAppInitializer.launchBookings(\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n    startPostPaymentFlow = { postBookingId, bookingId, ancillaryType, paymentFlowCallback ->\n        // Your app takes the add-on payment (\"seat\", \"baggage\", ...), then reports\n        // PaymentState.SUCCESS or PaymentState.FAILURE(message).\n    },\n)"
+                    }
+                ],
+                "points": [
+                    "`startPostPaymentFlow` is optional. Without it, the add-on checkout closes. See the Payment page.",
+                    "B2B with SSO uses `launchB2BSsoBookings` instead (see Initialize, B2B with SSO)."
+                ]
+            },
+            {
+                "id": "prefill",
+                "title": "Pre-fill passengers",
+                "summary": "Save your users' details before launching, so the SDK's passenger and guest forms are already filled in. Each call replaces what was saved before.",
+                "codes": [
+                    {
+                        "label": "Flight passengers",
+                        "code": "val passengers = listOf(\n    FlightPassengerData(\n        id = \"2959\",                      // your id, or null\n        firstName = \"John\", lastName = \"Doe\",\n        gender = Gender.Male,\n        phoneNumber = 966 to \"501234567\", // (country code, number), or null\n        email = \"john@example.com\",       // or null\n        birthDate = LocalDate.of(1990, 1, 1),\n        nationality = \"sa\",               // 2-letter ISO code\n        documentType = PassengerDocumentType.NationalID,\n        documentNumber = \"1234567890\",\n        documentExpirationDate = LocalDate.of(2031, 6, 8),\n    ),\n)\nAlmatarAppInitializer.preFillFlightPassengers(\n    passengers = passengers,\n    lastDepartureDate = LocalDate.of(2027, 2, 10),   // the last leg's date\n) { adultCount, childCount, infantCount, errorMessage ->\n    if (errorMessage != null) return@preFillFlightPassengers   // nothing was saved\n    // Launch with the same counts, e.g. launchFlightsSearchResults(\n    //     FlightSearchData(..., adultCount = adultCount!!, childCount = childCount!!, infantCount = infantCount!!, ...))\n}"
+                    },
+                    {
+                        "label": "Hotel guest",
+                        "code": "AlmatarAppInitializer.preFillHotelPassenger(\n    passenger = HotelPassengerData(\n        id = null,\n        firstName = \"John\", lastName = \"Doe\",\n        nationality = \"sa\",\n        gender = Gender.Male,\n        phoneNumber = 966 to \"501234567\",\n        email = \"john@example.com\",\n        birthDate = LocalDate.of(1990, 1, 1),\n    ),\n) { isCompleted, message ->\n    if (isCompleted) { /* launch the hotel flow */ }\n}"
+                    }
+                ],
+                "points": [
+                    "`nationality` must be a 2-letter ISO country code, such as `sa`, `eg` or `ae`.",
+                    "Allowed `documentType`: Saudi and other GCC nationals `Passport` or `NationalID`; everyone else `Passport` or `Iqama`.",
+                    "Ages are worked out on `lastDepartureDate`: under 2 is an infant, under 12 a child, otherwise an adult. `onComplete` returns these counts; launch with the same counts.",
+                    "When `errorMessage` is not null, it lists every invalid passenger and nothing is saved.",
+                    "The hotel guest is the main guest of the booking."
+                ]
+            },
+            {
+                "id": "clear-cache",
+                "title": "Clear saved passengers",
+                "summary": "Remove the details saved by the pre-fill functions, for example when the user logs out or before a flow that should start with empty forms.",
+                "codes": [
+                    {
+                        "label": "Clear",
+                        "code": "AlmatarAppInitializer.clearCachedFlightPassengers()   // saved by preFillFlightPassengers\nAlmatarAppInitializer.clearCachedHotelPassengers()    // saved by preFillHotelPassenger"
+                    }
+                ],
+                "points": [
+                    "Calling a pre-fill function again already replaces what was saved, so you don't need to clear before it."
+                ]
+            },
+            {
+                "id": "global-config",
+                "title": "Search region",
+                "summary": "Choose which places the hotel and airport search suggests. Call it before launching, or pass `supportedCountry` to `init`.",
+                "fields": [
+                    {
+                        "name": "SupportedCountry.ALL",
+                        "desc": "Default. Hotels and airports in every country."
+                    },
+                    {
+                        "name": "SupportedCountry.KSA",
+                        "desc": "Only hotels and departure airports in Saudi Arabia."
+                    }
+                ],
+                "codes": [
+                    {
+                        "label": "Search region",
+                        "code": "AlmatarAppInitializer.setupGlobalConfig(supportedCountry = SupportedCountry.KSA)"
+                    }
+                ]
+            }
+        ]
+    },
     "versions": [
+        {
+            "version": "1.0.6-alpha01",
+            "releaseDate": "2026-11-17",
+            "requirements": {
+                "gradle": "9.8.0",
+                "agp": "9.4.1",
+                "kotlin": "2.4.20",
+                "ksp": "2.3.12",
+                "compileSdk": 37,
+                "minSdk": 26,
+                "jdk": 17
+            },
+            "notes": "Static packages: show Almatar's static packages inside your own screen with the new AlmatarStaticPackages composable, or get the landing pages as data with AlmatarAppInitializer.getStaticPackagesLandingPages. See Features. The package booking screens now ship in core. On the package confirmation, the buttons sit above the navigation bar. The document scanner and the Umrah eligibility note are now always hidden in SDK screens.",
+            "settingsPluginVersion": "3.0.0",
+            "variants": {
+                "clean": {
+                    "permissions": [
+                        {
+                            "name": "android.permission.INTERNET",
+                            "from": "Almatar SDK, payments"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_NETWORK_STATE",
+                            "from": "Almatar SDK, payments"
+                        },
+                        {
+                            "name": "android.permission.WAKE_LOCK",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_COARSE_LOCATION",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_FINE_LOCATION",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.POST_NOTIFICATIONS",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_WIFI_STATE",
+                            "from": "Almatar SDK, OPPWA payments SDK"
+                        },
+                        {
+                            "name": "android.permission.NFC",
+                            "from": "OPPWA payments SDK (card reading)"
+                        },
+                        {
+                            "name": "android.permission.USE_FINGERPRINT",
+                            "from": "OPPWA payments SDK"
+                        },
+                        {
+                            "name": "com.google.android.providers.gsf.permission.READ_GSERVICES",
+                            "from": "Fingerprint Pro, used by Checkout.com fraud checks"
+                        }
+                    ]
+                },
+                "tracking": {
+                    "settingsPluginId": "com.almatar.settings.tracking",
+                    "addons": [
+                        "com.almatar:analytics-tracking:1.0.8"
+                    ],
+                    "tools": [
+                        {
+                            "name": "UXCam",
+                            "version": "3.11.2",
+                            "purpose": "Session replay and heatmaps; passenger and payment fields are masked"
+                        },
+                        {
+                            "name": "Insider",
+                            "version": "17.3.2",
+                            "purpose": "Customer engagement and product events"
+                        },
+                        {
+                            "name": "WebEngage",
+                            "version": "5.2.0",
+                            "purpose": "Customer engagement and journey events"
+                        },
+                        {
+                            "name": "Adjust",
+                            "version": "5.8.0",
+                            "purpose": "Install attribution and conversion events"
+                        },
+                        {
+                            "name": "Mixpanel",
+                            "version": "8.11.1",
+                            "purpose": "Product analytics and feature experiments"
+                        },
+                        {
+                            "name": "Firebase Analytics",
+                            "version": "24.0.0",
+                            "purpose": "App analytics events"
+                        },
+                        {
+                            "name": "Firebase Messaging",
+                            "version": "26.0.0",
+                            "purpose": "Push notifications for the engagement tools"
+                        }
+                    ],
+                    "extraPermissions": [
+                        {
+                            "name": "com.google.android.gms.permission.AD_ID",
+                            "from": "Adjust, Firebase Analytics"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_ADSERVICES_AD_ID",
+                            "from": "Firebase Analytics"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_ADSERVICES_ATTRIBUTION",
+                            "from": "Firebase Analytics"
+                        },
+                        {
+                            "name": "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE",
+                            "from": "Firebase Analytics (install referrer)"
+                        },
+                        {
+                            "name": "android.permission.RECEIVE_BOOT_COMPLETED",
+                            "from": "WorkManager (via the tracking tools)"
+                        },
+                        {
+                            "name": "android.permission.FOREGROUND_SERVICE",
+                            "from": "WorkManager (via the tracking tools)"
+                        },
+                        {
+                            "name": "com.google.android.c2dm.permission.RECEIVE",
+                            "from": "Firebase Messaging"
+                        },
+                        {
+                            "name": "android.permission.BLUETOOTH",
+                            "from": "Mixpanel"
+                        },
+                        {
+                            "name": "android.permission.BROADCAST_CLOSE_SYSTEM_DIALOGS",
+                            "from": "WebEngage"
+                        }
+                    ]
+                }
+            },
+            "api": {
+                "added": [
+                    {
+                        "name": "AlmatarStaticPackages",
+                        "group": "Static packages",
+                        "flows": [
+                            "b2c",
+                            "b2b"
+                        ],
+                        "signature": "@Composable\nfun AlmatarStaticPackages(\n    locale: LOCALE,\n    almatarFlowFinishedCallback: () -> Unit,\n    generateTokenImpl: (generateTokenCallback: GenerateTokenCallback) -> Unit,\n    startPaymentFlowImpl: StartPaymentFlow?,\n    modifier: Modifier = Modifier.fillMaxWidth(),\n    landingPageId: String? = null,\n    scrollable: Boolean = false,\n    baseUrl: String? = null,\n    sdkLaunchCallback: SdkLaunchCallback? = null,\n)",
+                        "desc": "The package cards of a landing page, inside your screen: the page with landingPageId, or the first one when it is null. Booking a card opens the SDK's package details, payment and confirmation screens."
+                    },
+                    {
+                        "name": "AlmatarAppInitializer.getStaticPackagesLandingPages",
+                        "group": "Static packages",
+                        "flows": [
+                            "b2c",
+                            "b2b"
+                        ],
+                        "signature": "fun getStaticPackagesLandingPages(\n    locale: LOCALE,\n    generateTokenImpl: (generateTokenCallback: GenerateTokenCallback) -> Unit,\n    callback: StaticPackagesLandingPagesCallback,\n    baseUrl: String? = null,\n)",
+                        "desc": "The static packages landing pages as data, with no UI. The result arrives on the main thread; a new call cancels one still running."
+                    },
+                    {
+                        "name": "StaticPackagesLandingPagesCallback",
+                        "group": "Static packages",
+                        "flows": [
+                            "b2c",
+                            "b2b"
+                        ],
+                        "signature": "interface StaticPackagesLandingPagesCallback {\n    fun onSuccess(landingPages: List<LandingPage>)\n    fun onError(error: Throwable)\n}",
+                        "desc": "Result of getStaticPackagesLandingPages. onError covers a rejected B2B token and request failures."
+                    }
+                ],
+                "changed": [],
+                "removed": []
+            }
+        },
         {
             "version": "1.0.0-alpha08",
             "releaseDate": "2026-11-12",

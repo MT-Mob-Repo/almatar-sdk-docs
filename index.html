@@ -257,6 +257,23 @@
         td.purpose { color: var(--muted); font-size: 14px; }
         .subhead { font-size: 13px; font-weight: 700; margin: 18px 0 4px; }
         .subhead:first-of-type { margin-top: 0; }
+        .callout {
+            margin: 4px 0 18px;
+            padding: 14px 16px 4px;
+            border: 1px solid var(--accent);
+            border-left-width: 4px;
+            border-radius: 10px;
+            background: var(--accent-soft);
+        }
+        .callout-title { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
+        .callout-title code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 13.5px;
+        }
+        .callout .notes { color: var(--text); }
+        .callout table { margin: 10px 0 14px; }
+        .callout td.state { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; color: var(--accent); font-weight: 600; }
+        .callout td.purpose { color: var(--text); }
         .points { margin: 0 0 14px; padding-left: 20px; font-size: 14px; color: var(--muted); }
         .points li { margin: 4px 0; }
         td.state { word-break: normal; white-space: nowrap; vertical-align: top; }
@@ -837,6 +854,18 @@
                 + section(apiSurfaceCard(data.versions, entry, flow.id), "api", "Public API");
         }
 
+        // One code block, or tabs when there are several. Tabs switch only within their .tabscope.
+        function codeTabs(codes, key) {
+            codes = codes || [];
+            if (codes.length === 1) return codeBlock(codes[0].code);
+            if (!codes.length) return "";
+            return `<div class="tabscope"><div class="dialects">` + codes.map((x, i) =>
+                `<button class="dialect${i === 0 ? " active" : ""}" data-dialect="${key}-${i}">${esc(x.label)}</button>`).join("")
+                + `</div>` + codes.map((x, i) =>
+                    `<div class="dialect-block" data-dialect="${key}-${i}"${i === 0 ? "" : " hidden"}>${codeBlock(x.code)}</div>`).join("")
+                + `</div>`;
+        }
+
         // A page made of one card per sections[] entry of a block such as "customization" or "debugging".
         function sectionsHtml(c) {
             if (!c) return `<p class="empty">Nothing documented yet.</p>`;
@@ -848,13 +877,15 @@
                     body += `<table>` + s.fields.map(f => `<tr><td class="perm state">${esc(f.name)}</td>`
                         + `<td class="purpose">${rich(f.desc)}</td></tr>`).join("") + `</table><div style="height:14px"></div>`;
                 }
-                const codes = s.codes || [];
-                if (codes.length === 1) body += codeBlock(codes[0].code);
-                if (codes.length > 1) {
-                    body += `<div class="dialects">` + codes.map((x, i) =>
-                        `<button class="dialect${i === 0 ? " active" : ""}" data-dialect="${s.id}-${i}">${esc(x.label)}</button>`).join("")
-                        + `</div>` + codes.map((x, i) =>
-                            `<div class="dialect-block" data-dialect="${s.id}-${i}"${i === 0 ? "" : " hidden"}>${codeBlock(x.code)}</div>`).join("");
+                body += codeTabs(s.codes, s.id);
+                const h = s.highlight;
+                if (h) {
+                    body += `<div class="callout tabscope"><p class="callout-title">${rich(h.title)}</p>`
+                        + (h.summary ? `<p class="notes">${rich(h.summary)}</p>` : "")
+                        + (h.rows && h.rows.length ? `<table>` + h.rows.map(r => `<tr><td class="perm state">${esc(r.name)}</td>`
+                            + `<td class="purpose">${rich(r.desc)}</td></tr>`).join("") + `</table>` : "")
+                        + codeTabs(h.codes, s.id + "-hl")
+                        + `</div>`;
                 }
                 if (s.points && s.points.length) {
                     body += `<ul class="points">${s.points.map(x => `<li>${rich(x)}</li>`).join("")}</ul>`;
@@ -867,11 +898,12 @@
         document.addEventListener("click", e => {
             const d = e.target.closest(".dialect");
             if (!d) return;
-            const card = d.closest(".card");
+            const card = d.closest(".tabscope") || d.closest(".card");
             if (!card) return;
             const key = d.dataset.dialect;
-            card.querySelectorAll(".dialect").forEach(b => b.classList.toggle("active", b === d));
-            card.querySelectorAll(".dialect-block").forEach(b => { b.hidden = b.dataset.dialect !== key; });
+            const own = el => (el.parentElement.closest(".tabscope") || el.closest(".card")) === card;
+            card.querySelectorAll(".dialect").forEach(b => { if (own(b)) b.classList.toggle("active", b === d); });
+            card.querySelectorAll(".dialect-block").forEach(b => { if (own(b)) b.hidden = b.dataset.dialect !== key; });
         });
 
         document.addEventListener("click", e => {

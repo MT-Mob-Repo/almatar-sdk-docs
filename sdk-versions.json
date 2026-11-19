@@ -409,8 +409,31 @@
                         "code": "AlmatarAppInitializer.launchFlightConfirmation(\n    bookingKey = \"Qk7RjeRRV9\",            // the booking's key\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n)"
                     }
                 ],
+                "highlight": {
+                    "title": "Edit mode: `FlightSearchData.editEnabled`",
+                    "summary": "Decides whether the user can change the trip you pass to `launchFlightsSearchResults`. It defaults to `false`, so if you leave it out the search is locked.",
+                    "rows": [
+                        {
+                            "name": "false (default)",
+                            "desc": "The results screen opens the edit sheet on its own. Origin, destination, dates and passenger count are locked, and multi-city legs can't be added or removed. Only the cabin class can change. The passenger forms are read-only."
+                        },
+                        {
+                            "name": "true",
+                            "desc": "Everything can be changed: route, dates, passengers, cabin class and legs. The passenger forms can be edited."
+                        }
+                    ],
+                    "codes": [
+                        {
+                            "label": "Locked (editEnabled = false)",
+                            "code": "// imports: com.almatar.model.sdk.*, com.almatar.model.flight.TripType,\n//          com.almatar.search.passenger.CabinClass, java.time.LocalDate\n// riyadh and jeddah are FlightLocationData (see the Search results tab above)\n// Locked: results for exactly this trip. Only the cabin class can change,\n// and the passenger forms are read-only.\nval flightSearchData = FlightSearchData(\n    tripType = TripType.ONEWAY,\n    cabinClass = CabinClass.ECONOMY,\n    adultCount = 2, childCount = 1, infantCount = 0,\n    legs = listOf(FlightSearchLeg(LocalDate.of(2027, 2, 1), riyadh, jeddah)),\n    editEnabled = false,   // the default, so it can be left out\n)\n\nAlmatarAppInitializer.launchFlightsSearchResults(\n    flightSearchData = flightSearchData,\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n    startPaymentFlowImpl = null,\n)"
+                        },
+                        {
+                            "label": "Editable (editEnabled = true)",
+                            "code": "// imports: com.almatar.model.sdk.*, com.almatar.model.flight.TripType,\n//          com.almatar.search.passenger.CabinClass, java.time.LocalDate\n// riyadh and jeddah are FlightLocationData (see the Search results tab above)\n// Editable: the user can change the route, dates, passengers and cabin class,\n// and add or remove multi-city legs.\nval flightSearchData = FlightSearchData(\n    tripType = TripType.ONEWAY,\n    cabinClass = CabinClass.ECONOMY,\n    adultCount = 2, childCount = 1, infantCount = 0,\n    legs = listOf(FlightSearchLeg(LocalDate.of(2027, 2, 1), riyadh, jeddah)),\n    editEnabled = true,\n)\n\nAlmatarAppInitializer.launchFlightsSearchResults(\n    flightSearchData = flightSearchData,\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n    startPaymentFlowImpl = null,\n)"
+                        }
+                    ]
+                },
                 "points": [
-                    "`editEnabled` (default `false`) controls what the user can change. With `false`, the results screen opens the edit sheet on its own, with origin, destination, dates and passenger count locked; multi-city legs can't be added or removed. Only the cabin class can still change. The passenger forms are read-only. With `true`, everything can be changed.",
                     "To fill the passenger forms too, call `preFillFlightPassengers` first and launch from its `onComplete` (see Pre-fill passengers).",
                     "The confirmation takes no payment parameter: the booking is already paid."
                 ]
@@ -433,10 +456,33 @@
                         "code": "AlmatarAppInitializer.launchHotelConfirmation(\n    publicKey = \"zMLN1JgEkp\",             // the booking's public key\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n)"
                     }
                 ],
+                "highlight": {
+                    "title": "Edit mode: `HotelSearchData.editEnabled`",
+                    "summary": "Decides whether the user can change the stay you pass to `launchHotelsSearchResults`. It defaults to `false`, so if you leave it out the search is locked.",
+                    "rows": [
+                        {
+                            "name": "false (default)",
+                            "desc": "The results screen opens the edit sheet on its own. Destination and dates are locked; rooms and guests can still change. The guest form (title, first name, last name and nationality) is read-only."
+                        },
+                        {
+                            "name": "true",
+                            "desc": "Everything can be changed: destination, dates, rooms and guests. The guest form can be edited."
+                        }
+                    ],
+                    "codes": [
+                        {
+                            "label": "Locked (editEnabled = false)",
+                            "code": "// imports: com.almatar.model.sdk.*, java.time.LocalDate, java.time.ZoneOffset\nfun millis(date: LocalDate) = date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()\n\n// Locked: destination and dates are fixed. Rooms and guests can still change,\n// and the guest form is read-only.\nval hotelData = HotelSearchData(\n    hotelsDestination = HotelsDestination.Madinah,\n    rooms = listOf(HotelSearchRooms(adultCount = 2, childrenBirthDates = emptyList())),\n    checkInDate = millis(LocalDate.of(2027, 2, 1)),\n    checkOutDate = millis(LocalDate.of(2027, 2, 4)),\n    editEnabled = false,   // the default, so it can be left out\n)\n\nAlmatarAppInitializer.launchHotelsSearchResults(\n    hotelData = hotelData,\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n    startPaymentFlowImpl = null,\n)"
+                        },
+                        {
+                            "label": "Editable (editEnabled = true)",
+                            "code": "// imports: com.almatar.model.sdk.*, java.time.LocalDate, java.time.ZoneOffset\nfun millis(date: LocalDate) = date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()\n\n// Editable: the user can change the destination, dates, rooms and guests,\n// and fill the guest form.\nval hotelData = HotelSearchData(\n    hotelsDestination = HotelsDestination.Madinah,\n    rooms = listOf(HotelSearchRooms(adultCount = 2, childrenBirthDates = emptyList())),\n    checkInDate = millis(LocalDate.of(2027, 2, 1)),\n    checkOutDate = millis(LocalDate.of(2027, 2, 4)),\n    editEnabled = true,\n)\n\nAlmatarAppInitializer.launchHotelsSearchResults(\n    hotelData = hotelData,\n    locale = locale,\n    almatarFlowFinishedCallback = ::onFlowFinished,\n    generateTokenImpl = ::generateToken,\n    startPaymentFlowImpl = null,\n)"
+                        }
+                    ]
+                },
                 "points": [
                     "One `HotelSearchRooms` per room. Children are given by birth date, so the SDK works out their ages.",
                     "`checkInDate` and `checkOutDate` are epoch milliseconds.",
-                    "`editEnabled` (default `false`) controls what the user can change. With `false`, the results screen opens the edit sheet on its own, with destination and dates locked; rooms and guests can still change. The guest form (title, first name, last name and nationality) is read-only. With `true`, everything can be changed.",
                     "To fill the guest form, call `preFillHotelPassenger` first."
                 ]
             },

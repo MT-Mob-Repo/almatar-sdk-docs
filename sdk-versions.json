@@ -231,6 +231,29 @@
                         "code": "almatarUiConfig = AlmatarUiConfig(\n    backgroundConfig = AlmatarBackgroundConfig.DrawableResource(R.drawable.app_background),\n    statusBarConfig = AlmatarStatusBarConfig(colorConfig = AlmatarColorConfig.Transparent),\n    toolbarConfig = AlmatarToolbarConfig(configColor = AlmatarColorConfig.Transparent),\n    backButtonRes = R.drawable.ic_back,\n)"
                     }
                 ]
+            },
+            {
+                "id": "dark-mode",
+                "title": "Dark mode",
+                "since": "1.0.6-alpha04",
+                "summary": "SDK screens and `AlmatarStaticPackages` are light by default, even when the device is in dark mode. Turn dark mode on with `enableDarkMode = true`; the SDK then follows the device's dark mode setting.",
+                "fields": [
+                    {
+                        "name": "enableDarkMode",
+                        "desc": "Optional, default `false`. `false`: always light. `true`: light or dark, following the device."
+                    }
+                ],
+                "codes": [
+                    {
+                        "label": "Kotlin",
+                        "code": "almatarUiConfig = AlmatarUiConfig(\n    // false (default): always light. true: follow the device's dark mode.\n    enableDarkMode = true,\n)"
+                    }
+                ],
+                "points": [
+                    "`AlmatarStaticPackages` sits inside your own screen. With dark mode off, its cards stay light even when your screen or the device is dark.",
+                    "Turn it on only if your app supports dark mode too, so SDK screens match yours.",
+                    "If you pass brand colors with `colors`, call `setColors` again when your theme changes (see Brand colors)."
+                ]
             }
         ]
     },
@@ -618,7 +641,7 @@
                     },
                     {
                         "label": "After (core)",
-                        "code": "// app/build.gradle.kts (core)\ndependencies {\n    // Google Play devices. For Huawei AppGallery use com.almatar:core-hms (see Setup).\n    implementation(\"com.almatar:core-gms:1.0.6-alpha03\")\n\n    // Optional: only if you want the tracking tools that general-sdk always bundled.\n    // implementation(\"com.almatar:analytics-tracking:1.0.8\")\n}"
+                        "code": "// app/build.gradle.kts (core)\ndependencies {\n    // Google Play devices. For Huawei AppGallery use com.almatar:core-hms (see Setup).\n    implementation(\"com.almatar:core-gms:1.0.6-alpha04\")\n\n    // Optional: only if you want the tracking tools that general-sdk always bundled.\n    // implementation(\"com.almatar:analytics-tracking:1.0.8\")\n}"
                     }
                 ],
                 "points": [
@@ -675,6 +698,165 @@
         ]
     },
     "versions": [
+        {
+            "version": "1.0.6-alpha04",
+            "releaseDate": "2026-11-19",
+            "requirements": {
+                "gradle": "9.8.0",
+                "agp": "9.4.1",
+                "kotlin": "2.4.20",
+                "ksp": "2.3.12",
+                "compileSdk": 37,
+                "minSdk": 26,
+                "jdk": 17
+            },
+            "notes": "Dark mode is now off by default: SDK screens and the AlmatarStaticPackages cards stay light even when the device is in dark mode. Turn it on with AlmatarUiConfig(enableDarkMode = true) to follow the device. See Customize the UI.",
+            "settingsPluginVersion": "3.0.0",
+            "variants": {
+                "clean": {
+                    "permissions": [
+                        {
+                            "name": "android.permission.INTERNET",
+                            "from": "Almatar SDK, payments"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_NETWORK_STATE",
+                            "from": "Almatar SDK, payments"
+                        },
+                        {
+                            "name": "android.permission.WAKE_LOCK",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_COARSE_LOCATION",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_FINE_LOCATION",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.POST_NOTIFICATIONS",
+                            "from": "Almatar SDK"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_WIFI_STATE",
+                            "from": "Almatar SDK, OPPWA payments SDK"
+                        },
+                        {
+                            "name": "android.permission.NFC",
+                            "from": "OPPWA payments SDK (card reading)"
+                        },
+                        {
+                            "name": "android.permission.USE_FINGERPRINT",
+                            "from": "OPPWA payments SDK"
+                        },
+                        {
+                            "name": "com.google.android.providers.gsf.permission.READ_GSERVICES",
+                            "from": "Fingerprint Pro, used by Checkout.com fraud checks"
+                        }
+                    ]
+                },
+                "tracking": {
+                    "settingsPluginId": "com.almatar.settings.tracking",
+                    "addons": [
+                        "com.almatar:analytics-tracking:1.0.8"
+                    ],
+                    "tools": [
+                        {
+                            "name": "UXCam",
+                            "version": "3.11.2",
+                            "purpose": "Session replay and heatmaps; passenger and payment fields are masked"
+                        },
+                        {
+                            "name": "Insider",
+                            "version": "17.3.2",
+                            "purpose": "Customer engagement and product events"
+                        },
+                        {
+                            "name": "WebEngage",
+                            "version": "5.2.0",
+                            "purpose": "Customer engagement and journey events"
+                        },
+                        {
+                            "name": "Adjust",
+                            "version": "5.8.0",
+                            "purpose": "Install attribution and conversion events"
+                        },
+                        {
+                            "name": "Mixpanel",
+                            "version": "8.11.1",
+                            "purpose": "Product analytics and feature experiments"
+                        },
+                        {
+                            "name": "Firebase Analytics",
+                            "version": "24.0.0",
+                            "purpose": "App analytics events"
+                        },
+                        {
+                            "name": "Firebase Messaging",
+                            "version": "26.0.0",
+                            "purpose": "Push notifications for the engagement tools"
+                        }
+                    ],
+                    "extraPermissions": [
+                        {
+                            "name": "com.google.android.gms.permission.AD_ID",
+                            "from": "Adjust, Firebase Analytics"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_ADSERVICES_AD_ID",
+                            "from": "Firebase Analytics"
+                        },
+                        {
+                            "name": "android.permission.ACCESS_ADSERVICES_ATTRIBUTION",
+                            "from": "Firebase Analytics"
+                        },
+                        {
+                            "name": "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE",
+                            "from": "Firebase Analytics (install referrer)"
+                        },
+                        {
+                            "name": "android.permission.RECEIVE_BOOT_COMPLETED",
+                            "from": "WorkManager (via the tracking tools)"
+                        },
+                        {
+                            "name": "android.permission.FOREGROUND_SERVICE",
+                            "from": "WorkManager (via the tracking tools)"
+                        },
+                        {
+                            "name": "com.google.android.c2dm.permission.RECEIVE",
+                            "from": "Firebase Messaging"
+                        },
+                        {
+                            "name": "android.permission.BLUETOOTH",
+                            "from": "Mixpanel"
+                        },
+                        {
+                            "name": "android.permission.BROADCAST_CLOSE_SYSTEM_DIALOGS",
+                            "from": "WebEngage"
+                        }
+                    ]
+                }
+            },
+            "api": {
+                "added": [
+                    {
+                        "name": "AlmatarUiConfig.enableDarkMode",
+                        "group": "UI customization",
+                        "flows": [
+                            "b2c",
+                            "b2b",
+                            "sso"
+                        ],
+                        "signature": "val enableDarkMode: Boolean = false",
+                        "desc": "Dark mode in SDK screens and in AlmatarStaticPackages. false (default): always light. true: follow the device's dark mode."
+                    }
+                ],
+                "changed": [],
+                "removed": []
+            }
+        },
         {
             "version": "1.0.6-alpha03",
             "releaseDate": "2026-11-19",

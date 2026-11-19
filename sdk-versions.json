@@ -387,7 +387,7 @@
                     }
                 ],
                 "points": [
-                    "`editEnabled = false` locks the search and the pre-filled passenger details, so the user books exactly what you passed. The default is `false`.",
+                    "`editEnabled` (default `false`) controls what the user can change. With `false`, the results screen opens the edit sheet on its own, with origin, destination, dates and passenger count locked; multi-city legs can't be added or removed. Only the cabin class can still change. The passenger forms are read-only. With `true`, everything can be changed.",
                     "To fill the passenger forms too, call `preFillFlightPassengers` first and launch from its `onComplete` (see Pre-fill passengers).",
                     "The confirmation takes no payment parameter: the booking is already paid."
                 ]
@@ -413,6 +413,7 @@
                 "points": [
                     "One `HotelSearchRooms` per room. Children are given by birth date, so the SDK works out their ages.",
                     "`checkInDate` and `checkOutDate` are epoch milliseconds.",
+                    "`editEnabled` (default `false`) controls what the user can change. With `false`, the results screen opens the edit sheet on its own, with destination and dates locked; rooms and guests can still change. The guest form (title, first name, last name and nationality) is read-only. With `true`, everything can be changed.",
                     "To fill the guest form, call `preFillHotelPassenger` first."
                 ]
             },

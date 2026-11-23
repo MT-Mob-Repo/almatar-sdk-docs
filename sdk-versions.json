@@ -111,6 +111,131 @@
         ],
         "otherFlowsNote": "Payment in this flow always goes through Almatar: `launchB2BSsoBookings` has no payment parameter."
     },
+    "about": {
+        "intro": "Core (`com.almatar:core-gms` / `core-hms`) is the Almatar SDK built from the Almatar app itself. It replaces `com.almatar.android:general-sdk` (7.3.x). This page explains why we made it and what you get with it.",
+        "sections": [
+            {
+                "id": "why",
+                "title": "Why we built core",
+                "summary": "general-sdk was a separate copy of the Almatar app's code. Every fix and feature had to be copied into it by hand, so the SDK fell behind the app and the same fix had to be made twice. Core is a module inside the Almatar app's own project, and the Almatar app runs on the same core. What we ship to you is the code our own app runs.",
+                "fields": [
+                    {
+                        "name": "One codebase",
+                        "desc": "The Almatar app and the SDK share `:core`. A fix or feature that lands in the app is in the next core release; it doesn't have to be copied into the SDK."
+                    },
+                    {
+                        "name": "Same code as the app",
+                        "desc": "Search, booking, checkout and trips run the same code in your app as in the Almatar app, so they behave the same."
+                    },
+                    {
+                        "name": "Faster releases",
+                        "desc": "Core releases follow the app's releases, without a separate port for every change."
+                    },
+                    {
+                        "name": "Less in your app",
+                        "desc": "general-sdk always bundled six tracking tools. Core ships none unless you add them yourself."
+                    }
+                ]
+            },
+            {
+                "id": "compare",
+                "title": "general-sdk and core side by side",
+                "fields": [
+                    {
+                        "name": "Artifact",
+                        "desc": "general-sdk: `com.almatar.android:general-sdk`. Core: `com.almatar:core-gms` for Google Play, `com.almatar:core-hms` for Huawei AppGallery."
+                    },
+                    {
+                        "name": "Where the code lives",
+                        "desc": "general-sdk: a separate copy of the app's code. Core: the module the Almatar app itself is built on."
+                    },
+                    {
+                        "name": "Tracking tools",
+                        "desc": "general-sdk: UXCam, Insider, WebEngage, Adjust, Mixpanel and Firebase, always. Core: none by default; add `com.almatar:analytics-tracking` only if you want them."
+                    },
+                    {
+                        "name": "Repositories",
+                        "desc": "general-sdk: you add each vendor repository by hand. Core: the `com.almatar.settings` Gradle plugin adds them for you."
+                    },
+                    {
+                        "name": "Your app's language and dark mode",
+                        "desc": "Core sets the language and dark mode on SDK screens only (since 1.0.6-alpha06), so your own screens aren't changed or recreated."
+                    },
+                    {
+                        "name": "Docs",
+                        "desc": "Core has docs for each version, including its build requirements, permissions and public API changes. Pick a version in the sidebar."
+                    }
+                ],
+                "points": [
+                    "The SDK's packages, `AlmatarAppInitializer.launch*` functions and models are the same, so most apps change only their Gradle files and the `init` call. See Migrate from general-sdk."
+                ]
+            },
+            {
+                "id": "features",
+                "title": "What core gives you",
+                "summary": "Everything below is in core today. The Features, Payment, Customize the UI and Debugging pages show how to use each one.",
+                "fields": [
+                    {
+                        "name": "Flights",
+                        "desc": "Flight search, straight-to-results for a known trip, and booking confirmation."
+                    },
+                    {
+                        "name": "Hotels",
+                        "desc": "Hotel search, straight-to-results in Makkah or Madinah, and booking confirmation."
+                    },
+                    {
+                        "name": "Static packages",
+                        "desc": "Almatar's static packages inside your own screen."
+                    },
+                    {
+                        "name": "My bookings",
+                        "desc": "The user's trips, with add-ons such as seats and baggage after booking."
+                    },
+                    {
+                        "name": "Pre-filled passengers",
+                        "desc": "Save your users' details so the passenger and guest forms are already filled in, and clear them on logout."
+                    },
+                    {
+                        "name": "Search region",
+                        "desc": "Choose which places the hotel and airport search suggests."
+                    },
+                    {
+                        "name": "B2C, B2B and B2B with SSO",
+                        "desc": "One SDK for consumer and corporate flows, including company travel policies."
+                    },
+                    {
+                        "name": "Payment",
+                        "desc": "Let Almatar take the payment, or take it in your own app."
+                    },
+                    {
+                        "name": "Your brand",
+                        "desc": "Brand colors, logo, your name in SDK text, background, bars, back button and dark mode."
+                    },
+                    {
+                        "name": "Debugging",
+                        "desc": "See the SDK's network calls with Chucker while you integrate."
+                    }
+                ]
+            },
+            {
+                "id": "choose",
+                "title": "Pick your setup",
+                "fields": [
+                    {
+                        "name": "Store",
+                        "desc": "Google Play: `core-gms`. Huawei AppGallery: `core-hms`. Shipping to both? Use a product flavor per store, and never put both in the same build variant."
+                    },
+                    {
+                        "name": "Tracking",
+                        "desc": "Without tracking: core only, with the fewest permissions. With tracking: add `com.almatar:analytics-tracking` and use the `com.almatar.settings.tracking` plugin. Tracking runs only inside Almatar screens."
+                    }
+                ],
+                "points": [
+                    "Start with Setup for the exact versions, then Initialize."
+                ]
+            }
+        ]
+    },
     "customization": {
         "intro": "SDK screens follow the `almatarUiConfig` you pass to `AlmatarAppInitializer.init`. Every field is optional: leave one out to keep Almatar's look.",
         "sections": [

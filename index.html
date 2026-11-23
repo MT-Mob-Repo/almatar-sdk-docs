@@ -919,6 +919,7 @@
         });
 
         const PAGES = [
+            { id: "about", title: "Why core", sub: "Why we built the core SDK, how it differs from general-sdk, and what it gives you." },
             { id: "setup", title: "Setup", sub: "Build requirements, the settings plugin and the dependency for your SDK version." },
             { id: "migrate", title: "Migrate from general-sdk", sub: "Move an app from com.almatar.android:general-sdk to core, step by step." },
             { id: "init", title: "Initialize", sub: "Initialize the SDK for your integration flow.", flows: true },
@@ -1019,6 +1020,7 @@
                 if (pageId === "init") html += initHtml(flow);
                 if (pageId === "payment") html += section(paymentCard(data, flow.id), "payment", "Payment");
                 if (pageId === "features") html += sectionsHtml(data.features);
+                if (pageId === "about") html += sectionsHtml(data.about);
                 if (pageId === "migrate") html += sectionsHtml(data.migration);
                 if (pageId === "customize") html += sectionsHtml(data.customization);
                 if (pageId === "debug") html += sectionsHtml(data.debugging);

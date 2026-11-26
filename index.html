@@ -840,9 +840,10 @@
                 + `<div class="dialects">${btns}</div>${blocks}</div>`;
         }
 
-        function initHtml(flow) {
+        function initHtml(flow, initialization) {
             let html = flow.desc ? `<p class="flowdesc">${esc(flow.desc)}</p>` : "";
             if (flow.init) html += section(codeCard("Initialize (" + flow.name + ")", flow.init), "init", "Initialize");
+            if (initialization && initialization.sections && initialization.sections.length) html += sectionsHtml(initialization);
             html += `<p class="notes">Next, open a flow: flights, hotels, static packages, bookings and more are on `
                 + `<a href="#/features">Features</a>. To match the SDK screens to your app (colors, logo, bars), see `
                 + `<a href="#/customize">Customize the UI</a>.</p>`;
@@ -1017,7 +1018,7 @@
 
                 let html = page.flows ? tabsHtml(flows, flow.id, "flow") : "";
                 if (pageId === "setup") html += setupHtml(data, entry, variants, state.variant);
-                if (pageId === "init") html += initHtml(flow);
+                if (pageId === "init") html += initHtml(flow, data.initialization);
                 if (pageId === "payment") html += section(paymentCard(data, flow.id), "payment", "Payment");
                 if (pageId === "features") html += sectionsHtml(data.features);
                 if (pageId === "about") html += sectionsHtml(data.about);

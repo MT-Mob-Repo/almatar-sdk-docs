@@ -55,6 +55,58 @@
             "init": "// 1. Initialize in B2B mode\nAlmatarAppInitializer.init(\n    application = this,\n    baseUrl = \"<your base url>\",\n    almatarEnvironment = AlmatarEnvironment.Production,\n    supportNumber = \"<support number>\",\n    almatarUiConfig = AlmatarUiConfig(),\n    enableB2bSDK = true,\n    brandName = \"<your brand>\",\n)\n\n// 2. Launch bookings with a short-lived SSO token\nAlmatarAppInitializer.launchB2BSsoBookings(\n    shortLivedToken = token,\n    locale = LOCALE.ENGLISH,\n    almatarFlowFinishedCallback = { /* flow closed */ },\n    sdkLaunchCallback = object : SdkLaunchCallback {\n        override fun onError(error: Throwable) { /* handle */ }\n    },\n)"
         }
     ],
+    "initialization": {
+        "sections": [
+            {
+                "id": "support-number",
+                "title": "Support number",
+                "summary": "`supportNumber` is required. It is the WhatsApp number your users reach when they need help with a booking after it's made, such as changing or cancelling it. The SDK opens it in WhatsApp, not the phone dialer.",
+                "fields": [
+                    {
+                        "name": "Flight confirmation",
+                        "desc": "The support button on the booking confirmation screen."
+                    },
+                    {
+                        "name": "Manage booking",
+                        "desc": "Contacting support from a car booking's Manage booking sheet."
+                    },
+                    {
+                        "name": "Cancellation policy",
+                        "desc": "The answer to \"Can I modify my booking?\" on a flight: \"reach us on WhatsApp at +<number>\"."
+                    }
+                ],
+                "highlight": {
+                    "title": "Which number to pass",
+                    "summary": "Pick who handles your customers' booking changes and cancellations.",
+                    "rows": [
+                        {
+                            "name": "Almatar support",
+                            "desc": "Almatar's support team handles your customers' booking requests. Pass `966920005511`."
+                        },
+                        {
+                            "name": "Your own support",
+                            "desc": "Your team handles your customers' booking requests. Pass your own support WhatsApp number."
+                        }
+                    ],
+                    "codes": [
+                        {
+                            "label": "Almatar support",
+                            "code": "AlmatarAppInitializer.init(\n    // ...\n    supportNumber = \"966920005511\",\n)"
+                        },
+                        {
+                            "label": "Your own support",
+                            "code": "AlmatarAppInitializer.init(\n    // ...\n    supportNumber = \"<your WhatsApp number>\", // e.g. \"9665XXXXXXXX\"\n)"
+                        }
+                    ]
+                },
+                "points": [
+                    "Pass the country code and number, for example `966920005511`. The SDK adds the `+` where it shows the number and builds the WhatsApp link from it.",
+                    "From `1.0.6-alpha08`, the SDK cleans the number up for you: it keeps the digits and drops a leading `00`, so `+966 920 005 511` and `00966920005511` both work. On earlier versions, pass digits only: a `+`, space or dash breaks the WhatsApp link.",
+                    "The number must have WhatsApp. If it is empty or wrong, the support button opens a chat that doesn't work."
+                ]
+            }
+        ]
+    },
     "payment": {
         "flows": [
             "b2c",
